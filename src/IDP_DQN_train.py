@@ -258,7 +258,7 @@ for i_episode in range(num_episodes):
             plot_durations()
             break
 
-torch.save(policy_net.state_dict(), 'trained_models/trained_IDP-v4_model.pth')
+torch.save(policy_net.state_dict(), 'C:/Users/natha/Desktop/FYP-2024/src/trained_models/trained_IDP_DQN_model.pth')
 
 print('Complete')
 plot_durations(show_result=True)

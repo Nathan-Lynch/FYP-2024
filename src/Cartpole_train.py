@@ -11,15 +11,14 @@ import torch.nn as nn
 import torch.optim as optim
 
 from DQN import DQN
+from plots import plot_rewards_loss
+
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
 env = gym.make("CartPole-v1")
 
-# set up matplotlib, checks if using ipython backend
-is_ipython = 'inline' in matplotlib.get_backend()
-if is_ipython:
-    from IPython import display
-
-plt.ion() # enables interactive plot
+#plt.ion() # enables interactive plot
 
 # Checks if cuda compatible GPU is available, uses CPU if not
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -28,11 +27,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
 
-
 class ReplayMemory(object):
     ''' Allows us to create instances of a replay buffer'''
     def __init__(self, capacity):
-        ''' Memory is implemented as a double ended queue) with a max length of 'capacity'.
+        ''' Memory is implemented as a double ended queue with a max length of 'capacity'.
             This ensures that the buffer wont exceed the specified capacity, and when
             new transitions are added beyond the capacity, the oldest transitions will
             be removed. '''
@@ -51,13 +49,13 @@ class ReplayMemory(object):
         ''' Returns current number of transitions.'''
         return len(self.memory)
     
-BATCH_SIZE = 128 # BATCH_SIZE is the number of transitions sampled from the replay buffer
-GAMMA = 0.99 # GAMMA is the discount factor
-EPS_START = 0.9 # EPS_START is the starting value of epsilon
-EPS_END = 0.05 # EPS_END is the final value of epsilon
-EPS_DECAY = 1000 # EPS_DECAY controls the rate of exponential decay of epsilon, higher means a slower decay
-TAU = 0.005 # TAU is the update rate of the target network
-LR = 1e-4 # LR is the learning rate of the `AdamW` optimizer
+BATCH_SIZE = 128 # No. of transitions sampled from the replay buffer
+GAMMA = 0.99 # The discount factor
+EPS_START = 0.9 # The starting value of epsilon
+EPS_END = 0.05 # The final value of epsilon
+EPS_DECAY = 1000 # Controls the rate of exponential decay of epsilon, higher means a slower decay
+TAU = 0.005 # The update rate of the target network
+LR = 1e-4 # Learning rate of the `AdamW` optimizer
 
 state, info = env.reset()
 n_observations = len(state) # Get the number of state observations
@@ -101,44 +99,9 @@ def select_action(state):
     else:
         return torch.tensor([[env.action_space.sample()]], device=device, dtype=torch.long) # Selects a random action
 
-
-# List to store duration of each episode while training
 episode_durations = []
-
-def plot_durations(show_result=False):
-    ''' Takes optional Bool parameter show_result that determines whether the plot
-        indicates that its displaying results or during training.'''
-    
-    plt.figure(1) # creare plot with figure 1
-
-    # episode durations converted into a tensor with float data type
-    durations_t = torch.tensor(episode_durations, dtype=torch.float) 
-
-    # If not training
-    if show_result:
-        plt.title('Result')
-    # if training
-    else:
-        plt.clf() # clear figure, resets to empty plot
-        plt.title('Training...')
-    plt.xlabel('Episode')
-    plt.ylabel('Duration')
-    plt.plot(durations_t.numpy()) # plots duration of each episode
-
-    # Take 100 episode averages and plot them
-    if len(durations_t) >= 100:
-        means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
-        means = torch.cat((torch.zeros(99), means))
-        plt.plot(means.numpy())
-
-    plt.pause(0.001)  # pause a bit so that plots are updated
-    if is_ipython:
-        if not show_result:
-            # Get current figure, returns reference to the current figure
-            display.display(plt.gcf())
-            display.clear_output(wait=True)
-        else:
-            display.display(plt.gcf())
+rewards = []
+losses = []
 
 def optimize_model():
     ''' Trains DQN  model using the collected experiences stores in the 
@@ -146,7 +109,7 @@ def optimize_model():
     
     # If the number of transitions less than batch size, training not performed
     if len(memory) < BATCH_SIZE:
-        return
+        return 0
     
     # Gets a sample of transitions from replay buffer
     transitions = memory.sample(BATCH_SIZE)
@@ -203,10 +166,14 @@ def optimize_model():
     # Model parameters are updated using a gradient descent step.
     optimizer.step()
 
+    return loss.item()
+
 if torch.cuda.is_available():
-    num_episodes = 600
+    num_episodes = 1000
 else:
-    num_episodes = 50
+    num_episodes = 1000
+
+fig, axs = plt.subplots(2, 1, figsize=(8, 6))
 
 for i_episode in range(num_episodes):
 
@@ -215,7 +182,10 @@ for i_episode in range(num_episodes):
 
     # converts state to a tensor
     state = torch.tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
-    
+
+    total_reward = 0
+    total_loss_per_episode = 0  # Initialize total_loss_per_episode
+
     for t in count():
         action = select_action(state)
         observation, reward, terminated, truncated, _ = env.step(action.item())
@@ -235,7 +205,8 @@ for i_episode in range(num_episodes):
         state = next_state
 
         # Perform one step of the optimization (on the policy network)
-        optimize_model()
+        loss = optimize_model()
+        total_loss_per_episode += loss  # Accumulate loss for the episode
 
         # Soft update of the target network's weights
         # θ′ ← τ θ + (1 −τ )θ′
@@ -248,12 +219,18 @@ for i_episode in range(num_episodes):
 
         if done:
             episode_durations.append(t + 1)
-            plot_durations()
+            rewards.append(total_reward)
+            #plot_rewards_loss(axs, rewards, losses)
             break
+        
+        total_reward += reward.item()
+    
+    avg_loss_per_episode = total_loss_per_episode / (t + 1)  # Divide by the total number of steps in the episode
+    losses.append(avg_loss_per_episode)
 
-torch.save(policy_net.state_dict(), 'trained_models/trained_cartpole_model.pth')
+torch.save(policy_net.state_dict(), 'C:/Users/natha/Desktop/FYP-2024/src/trained_models/trained_cartpole_model.pth')
 
 print('Complete')
-plot_durations(show_result=True)
-plt.ioff()
-plt.show()
+plot_rewards_loss(axs, rewards, losses, show_result=True)
+#plt.ioff()
+#plt.show()

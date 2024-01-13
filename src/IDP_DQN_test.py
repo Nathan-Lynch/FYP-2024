@@ -1,39 +1,17 @@
 import gymnasium as gym
 import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
+from DQN import DQN
 
 env = gym.make("InvertedDoublePendulum-v4", render_mode = "human")
 
-class DQN(nn.Module):
-
-    def __init__(self, n_observations, n_actions):
-        super(DQN, self).__init__()
-        self.layer1 = nn.Linear(n_observations, 128)
-        self.layer2 = nn.Linear(128, 128)
-        self.layer3 = nn.Linear(128, n_actions)
-
-    def forward(self, x):
-        x = F.relu(self.layer1(x))
-        x = F.relu(self.layer2(x))
-        return self.layer3(x)
-
-# Get the number of actions from the gym action space
 n_actions = env.action_space.shape[0]
-# Get the number of state observations
 state, info = env.reset()
 n_observations = len(state)
 
 model = DQN(n_observations, n_actions)
-
-# Load the trained model state dictionary
-model.load_state_dict(torch.load('trained_models/trained_IDP-v4_model.pth'))
-
-# Set the model to evaluation mode (important for some models with dropout, batch norm, etc.)
+model.load_state_dict(torch.load('C:/Users/natha/Desktop/FYP-2024/src/trained_models/trained_IDP_DQN_model.pth'))
 model.eval()
 
-episode_number = 0
 total_reward = 0
 
 def test_cartpole(model, episodes):    
