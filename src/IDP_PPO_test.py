@@ -1,21 +1,14 @@
 import gymnasium as gym
-import torch
-from PPO import PPO
 from plots import plot_rewards_test
 import matplotlib.pyplot as plt
+from stable_baselines3 import PPO
 
 plt.figure(2)
-rewards = []
-
 def test_IDP_PPO(episodes):
-    total_reward = 0
+    rewards = []
+    env = gym.make("InvertedDoublePendulum-v4", render_mode=None)
+    model = PPO.load("C:/Users/natha/Desktop/FYP-2024/trained_models/trained_IDP_td3_model")
 
-    env = gym.make("InvertedDoublePendulum-v4", render_mode = 'human')
-    
-    model = PPO()
-    model.policy_module.load_state_dict(torch.load('C:/Users/natha/Desktop/FYP-2024/src/trained_models/trained_IDP_PPO_model.pth'))
-    model.policy_module.eval()
-    
     for episode in range(episodes):
         total_reward = 0
         observation, _ = env.reset()
@@ -23,25 +16,19 @@ def test_IDP_PPO(episodes):
         truncated = False
         terminated = False
 
-        while not truncated or not terminated:
-            state_tensor = {'observation': torch.tensor(observation, dtype=torch.float32)}
-            with torch.no_grad():
-                action_params = model.policy_module(state_tensor)
-
-            action_mean = action_params['loc'].cpu().numpy()
-            action = torch.tanh(action_mean)
-
+        while not truncated and not terminated:
+            action, _state = model.predict(observation, deterministic=True)
             observation, reward, terminated, truncated, _ = env.step(action)
 
             total_reward += reward
 
             if terminated or truncated:
                 rewards.append(total_reward)
-                break            
-        
-        print(f"Episode {episode}: Total Reward: {total_reward}")
+                break
 
-    plot_rewards_test(rewards)
+        print(f"Episode {episode+1}: Total Reward: {total_reward}")
+
+    plot_rewards_test(rewards, 'IDP-v4_Test')
 
     env.close()
 

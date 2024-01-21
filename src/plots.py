@@ -1,7 +1,7 @@
 import torch
 import matplotlib.pyplot as plt
 
-def plot_rewards_loss(axs, episode_rewards, episode_losses, show_result=False):
+def plot_rewards_loss(axs, episode_rewards, episode_losses, trained_path, show_result=False):
     rewards = torch.tensor(episode_rewards, dtype=torch.float)
     losses = torch.tensor(episode_losses, dtype=torch.float)
 
@@ -22,11 +22,11 @@ def plot_rewards_loss(axs, episode_rewards, episode_losses, show_result=False):
         mean_reward = torch.cat((torch.zeros(99), mean_reward))
         axs[0].plot(mean_reward.numpy(), color='orange')
 
-    plt.savefig('C:/Users/natha/Desktop/FYP-2024/src/plots/CartPole-v1.png')
+    plt.savefig('C:/Users/natha/Desktop/FYP-2024/plots/{}.png'.format(trained_path))
     plt.pause(0.001)
 
 
-def plot_rewards_test(episode_rewards):
+def plot_rewards_test(episode_rewards, trained_path):
     rewards = torch.tensor(episode_rewards, dtype=torch.float)
 
     plt.plot(rewards.numpy(), color='blue')
@@ -34,4 +34,4 @@ def plot_rewards_test(episode_rewards):
     plt.ylabel('Reward')  
     plt.xlabel('Episode') 
 
-    plt.savefig('C:/Users/natha/Desktop/FYP-2024/src/plots/CartPole-v1_Test.png')
+    plt.savefig('C:/Users/natha/Desktop/FYP-2024/plots/{}.png'.format(trained_path))
