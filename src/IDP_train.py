@@ -9,9 +9,9 @@ logdir = "logs"
 
 seed = 12
 
-model1_dir = "trained_IDP_PPO_model"
-model2_dir = "trained_IDP_SAC_model"
-model3_dir = "trained_IDP_td3_model"
+model1_dir = "trained_idp_ppo_model"
+model2_dir = "trained_idp_sac_model"
+model3_dir = "trained_idp_td3_model"
 
 TIMESTEPS = 1_000_000
 
@@ -51,9 +51,9 @@ def evaluate_model(model, env):
     avg_results = np.mean(results) 
     return avg_results
 
-#train_model(PPO, env, model1_dir, "IDP_PPO")
-#train_model(SAC, env, model2_dir, "IDP_SAC")
-#train_model(TD3, env, model3_dir, "IDP_td3")
+train_model(PPO, env, model1_dir, "IDP_PPO")
+train_model(SAC, env, model2_dir, "IDP_SAC")
+train_model(TD3, env, model3_dir, "IDP_td3")
 
 ppo_model = PPO.load(os.path.join(base_dir, model1_dir + '_best', 'best_model'))
 sac_model = SAC.load(os.path.join(base_dir, model2_dir + '_best', 'best_model'))
