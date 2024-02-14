@@ -1,10 +1,11 @@
 import gymnasium as gym
 from stable_baselines3 import PPO, SAC, TD3
-from stable_baselines3.common.callbacks import EvalCallback,StopTrainingOnNoModelImprovement
+from stable_baselines3.common.callbacks import CallbackList, EvalCallback, StopTrainingOnRewardThreshold
+from custom_callbacks import RewardLossCallback
 import os
 import numpy as np
 
-base_dir = 'C:/Users/natha/Desktop/FYP-2024/trained_models/'
+base_dir = 'C:/Users/35385/Desktop/FYP-2024/trained_models'
 logdir = "logs"
 
 seed = 12
@@ -15,25 +16,29 @@ model3_dir = "trained_idp_td3_model"
 
 TIMESTEPS = 1_000_000
 
-env = gym.make("InvertedDoublePendulum-v4", render_mode="rgb_array")
+env = gym.make("InvertedDoublePendulum-v4", render_mode=None)
 
 def train_model(algorithm, env, model_dir, tb_log_name):
 
-    stop_train_callback = StopTrainingOnNoModelImprovement(max_no_improvement_evals=5, min_evals=10, verbose=1)
+    reward_threshold_callback = StopTrainingOnRewardThreshold(reward_threshold = 300, verbose=1)
 
     eval_callback = EvalCallback(env, best_model_save_path=os.path.join(base_dir, model_dir + '_best'), 
                                 log_path=logdir, eval_freq=5000, n_eval_episodes=5, 
-                                deterministic=True, render=False, callback_after_eval=stop_train_callback)
+                                deterministic=True, render=False, callback_after_eval=reward_threshold_callback)
 
-    model = algorithm("MlpPolicy", env, verbose=0, tensorboard_log=logdir)
-    model.learn(total_timesteps=TIMESTEPS, progress_bar=True, tb_log_name=tb_log_name, callback=eval_callback)
+    reward_loss_callback = RewardLossCallback()
+
+    callback = CallbackList([eval_callback, reward_loss_callback])
+
+    model = algorithm("MlpPolicy", env, verbose=0, tensorboard_log=logdir, learning_rate = 0.001)
+    model.learn(total_timesteps=TIMESTEPS, progress_bar=True, tb_log_name=tb_log_name, callback=callback)
     return model
 
 def evaluate_model(model, env):
     results = []
     for _ in range(10):
         avg_reward = []
-        for i in range(5):
+        for _ in range(5):
             total_reward = 0
             observation, _ = env.reset()
 

@@ -4,7 +4,7 @@ from stable_baselines3 import PPO
 model_dir = "trained_BW_PPO_model"
 logdir = "logs"
 
-TIMESTEPS = 1_000_000
+TIMESTEPS = 10_000_000
 
 env = gym.make("BipedalWalker-v3", render_mode=None)
 

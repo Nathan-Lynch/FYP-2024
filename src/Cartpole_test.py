@@ -1,6 +1,6 @@
 import gymnasium as gym
 import torch
-from DQN import DQN
+from Models.DQN import DQN
 from plots import plot_rewards_test
 import matplotlib.pyplot as plt
 
