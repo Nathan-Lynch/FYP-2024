@@ -19,7 +19,7 @@ class RewardLossCallback(BaseCallback):
                 self.model.learning_rate = self.model.learning_rate * 1.1
             else:
                 self.model.learning_rate = self.model.learning_rate * 0.9
-        
+
         return True
 
 

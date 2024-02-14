@@ -56,9 +56,9 @@ def evaluate_model(model, env):
     avg_results = np.mean(results) 
     return avg_results
 
-train_model(PPO, env, model1_dir, "IDP_PPO")
-train_model(SAC, env, model2_dir, "IDP_SAC")
-train_model(TD3, env, model3_dir, "IDP_td3")
+train_model(PPO, env, model1_dir, "idp_ppo")
+train_model(SAC, env, model2_dir, "idp_sac")
+train_model(TD3, env, model3_dir, "idp_td3")
 
 ppo_model = PPO.load(os.path.join(base_dir, model1_dir + '_best', 'best_model'))
 sac_model = SAC.load(os.path.join(base_dir, model2_dir + '_best', 'best_model'))
