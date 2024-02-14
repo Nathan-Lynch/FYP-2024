@@ -1,13 +1,12 @@
 import gymnasium as gym
 from stable_baselines3 import PPO, SAC, TD3
 from stable_baselines3.common.callbacks import CallbackList, EvalCallback, StopTrainingOnRewardThreshold
+from custom_callbacks import RewardLossCallback
 import os
 import numpy as np
 
 base_dir = 'C:/Users/35385/Desktop/FYP-2024/trained_models'
-logdir = "/home/nl6/FYP/FYP-2024/logs"
-
-seed = 12
+logdir = "logs"
 
 model1_dir = "trained_idp_ppo_model"
 model2_dir = "trained_idp_sac_model"
@@ -22,12 +21,14 @@ def train_model(algorithm, env, model_dir, tb_log_name):
     reward_threshold_callback = StopTrainingOnRewardThreshold(reward_threshold = 9500, verbose=1)
 
     eval_callback = EvalCallback(env, best_model_save_path=os.path.join(base_dir, model_dir + '_best'), 
-                                log_path=logdir, eval_freq=5000, n_eval_episodes=5, 
+                                log_path=logdir, eval_freq=10000, n_eval_episodes=5, 
                                 deterministic=True, render=False, callback_after_eval=reward_threshold_callback)
+
+    reward_loss_callback = RewardLossCallback()
 
     callback = CallbackList([eval_callback])
 
-    model = algorithm("MlpPolicy", env, verbose=0, tensorboard_log=logdir)
+    model = algorithm("MlpPolicy", env, verbose=0, tensorboard_log=logdir, learning_rate = 0.001)
     model.learn(total_timesteps=TIMESTEPS, progress_bar=True, tb_log_name=tb_log_name, callback=callback)
     return model
 
@@ -59,7 +60,7 @@ train_model(TD3, env, model3_dir, "idp_td3")
 
 ppo_model = PPO.load(os.path.join(base_dir, model1_dir + '_best', 'best_model'))
 sac_model = SAC.load(os.path.join(base_dir, model2_dir + '_best', 'best_model'))
-td3_model = TD3.load(os.path.join(base_dir, model3_dir + '_best',' best_model'))
+td3_model = TD3.load(os.path.join(base_dir, model3_dir + '_best','best_model'))
 
 avg_reward_ppo = evaluate_model(ppo_model, env)
 avg_reward_sac = evaluate_model(sac_model, env)

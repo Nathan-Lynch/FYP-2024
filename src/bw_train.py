@@ -17,15 +17,13 @@ def train_model(algorithm, env, model_dir, tb_log_name):
 
     reward_threshold_callback = StopTrainingOnRewardThreshold(reward_threshold=300, verbose=1)
 
-    reward_loss_callback = RewardLossCallback()
-
     eval_callback = EvalCallback(env, best_model_save_path=os.path.join(base_dir, model_dir + '_best'),
-                                 log_path=logdir, eval_freq=1000, n_eval_episodes=10,
+                                 log_path=logdir, eval_freq=10000, n_eval_episodes=10,
                                  deterministic=True, render=False, callback_after_eval=reward_threshold_callback)
 
     model = algorithm("MlpPolicy", env, verbose=0, tensorboard_log=logdir)
 
-    callback = CallbackList([eval_callback, reward_loss_callback])
+    callback = CallbackList([eval_callback])
 
     model.learn(total_timesteps=TIMESTEPS, progress_bar=True, tb_log_name=tb_log_name, callback=callback)
     return model
