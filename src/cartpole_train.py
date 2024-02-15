@@ -8,7 +8,7 @@ base_dir = '/home/nl6/FYP/FYP-2024/trained_models'
 model_dir = "trained_cartpole_ppo_model"
 logdir = "/home/nl6/FYP/FYP-2024/logs"
 
-TIMESTEPS = 10_000_000
+TIMESTEPS = 1_000_000
 
 env = gym.make("CartPole-v1", render_mode="rgb_array")
 
@@ -17,7 +17,7 @@ def train_model(algorithm, env, model_dir, tb_log_name):
     reward_threshold_callback = StopTrainingOnRewardThreshold(reward_threshold=500, verbose=1)
 
     eval_callback = EvalCallback(env, best_model_save_path=os.path.join(base_dir, model_dir + '_best'),
-                                 log_path=logdir, eval_freq=1000, n_eval_episodes=10,
+                                 log_path=logdir, eval_freq=5000, n_eval_episodes=10,
                                  deterministic=True, render=False, callback_after_eval=reward_threshold_callback)
 
     model = algorithm("MlpPolicy", env, verbose=0, tensorboard_log=logdir)
