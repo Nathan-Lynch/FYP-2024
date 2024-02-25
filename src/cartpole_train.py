@@ -60,7 +60,7 @@ def train_model(algorithm, env, model_dir, tb_log_name, schedule):
 
     model = algorithm("MlpPolicy", env, verbose=0, tensorboard_log=logdir, learning_rate=lr)
 
-    callback = CallbackList([eval_callback, rl])
+    callback = CallbackList([eval_callback])
 
     model.learn(total_timesteps=TIMESTEPS, progress_bar=True, tb_log_name=tb_log_name, callback=callback)
     return model
