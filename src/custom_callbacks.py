@@ -4,7 +4,7 @@ from stable_baselines3.common.callbacks import BaseCallback
 class RewardLossCallback(BaseCallback):
     def __init__(self, verbose=0):
         super(RewardLossCallback, self).__init__(verbose)
-        self.prev_reward = None
+        self.prev_episode_reward = None
         self.reward_loss = None
 
     def _on_step(self):
