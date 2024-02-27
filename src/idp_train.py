@@ -44,14 +44,14 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
 def train_model(algorithm, env, model_dir, tb_log_name, schedule):
 
     if schedule == False:
-        lr = 0.001
+        lr = 0.0003
     else:
-        lr = linear_schedule(0.001)
+        lr = linear_schedule(0.003) 
 
-    reward_threshold_callback = StopTrainingOnRewardThreshold(reward_threshold = 9360, verbose=1)
+    reward_threshold_callback = StopTrainingOnRewardThreshold(reward_threshold = 9359, verbose=1)
 
     eval_callback = EvalCallback(env, best_model_save_path=os.path.join(base_dir, model_dir + '_best'), 
-                                log_path=logdir, eval_freq=25000, n_eval_episodes=25, 
+                                log_path=logdir, eval_freq=5000, n_eval_episodes=10, 
                                 deterministic=True, render=False, callback_after_eval=reward_threshold_callback)
 
     callback = CallbackList([eval_callback])

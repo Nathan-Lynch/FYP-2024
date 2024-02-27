@@ -8,12 +8,12 @@ from evaluate_model import evaluate_model
 import os
 import numpy as np
 
-#base_dir = '/home/nl6/FYP/FYP-2024/trained_models'
-base_dir = 'C:/Users/natha/Desktop/FYP-2024/trained_models'
+base_dir = '/home/nl6/FYP/FYP-2024/trained_models'
+#base_dir = 'C:/Users/natha/Desktop/FYP-2024/trained_models'
 model_dir = "trained_cartpole_dqn_model"
 model2_dir = "trained_cartpole_dqn_linear_lr_model"
-logdir = 'C:/Users/natha/Desktop/FYP-2024/logs/cartpole/'
-#logdir = "/home/nl6/FYP/FYP-2024/logs"
+#logdir = 'C:/Users/natha/Desktop/FYP-2024/logs/cartpole/'
+logdir = "/home/nl6/FYP/FYP-2024/logs/cartpole"
 
 TIMESTEPS = 5_000_000
 
@@ -48,7 +48,7 @@ def train_model(algorithm, env, model_dir, tb_log_name, schedule):
     if schedule == False:
         lr = 0.001
     else:
-        lr = linear_schedule(0.001)
+        lr = linear_schedule(0.01)
 
     reward_threshold_callback = StopTrainingOnRewardThreshold(reward_threshold=500, verbose=1)
 
@@ -80,4 +80,4 @@ for i in range(5):
 print(np.mean(const_lr_rewards))
 print(np.mean(decreasing_lr_rewards))
 
-train_model(DQN, vec_env, "test", "cartpole_dqn_rl_test", schedule=False)
+#train_model(DQN, vec_env, "test", "cartpole_dqn_rl_test", schedule=False)

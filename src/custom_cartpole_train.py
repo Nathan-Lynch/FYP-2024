@@ -9,10 +9,8 @@ import os
 import numpy as np
 
 import sys
-#sys.path.append("/home/nl6/FYP/FYP-2024/")
-sys.path.append("C:/Users/35385/Desktop/FYP-2024")
-
-
+sys.path.append("/home/nl6/FYP/FYP-2024/")
+#sys.path.append("C:/Users/35385/Desktop/FYP-2024")
 
 from custom_envs.custom_cartpole import CustomCartPoleEnv
 
@@ -21,17 +19,17 @@ gym.envs.register(
     entry_point='custom_envs.custom_cartpole:CustomCartPoleEnv',
     )
 
-#base_dir = '/home/nl6/FYP/FYP-2024/trained_models'
-base_dir = 'C:/Users/35385/Desktop/FYP-2024/trained_models'
+base_dir = '/home/nl6/FYP/FYP-2024/trained_models'
+#base_dir = 'C:/Users/35385/Desktop/FYP-2024/trained_models'
 model1_dir = "trained_custom_cartpole_dqn_model"
 model2_dir = "trained_custom_cartpole_dqn_linear_lr_model"
-logdir = 'C:/Users/35385/Desktop/FYP-2024/logs/cartpole'
-#logdir = "/home/nl6/FYP/FYP-2024/logs"
+#logdir = 'C:/Users/35385/Desktop/FYP-2024/logs/cartpole'
+logdir = "/home/nl6/FYP/FYP-2024/logs/custom_cartpole/"
 
 TIMESTEPS = 5_000_000
 
 env = gym.make("CustomCartPole-v0", render_mode=None)
-vec_env = make_vec_env("CustomCartPole-v0", n_envs=16)
+vec_env = make_vec_env("CustomCartPole-v0", n_envs=8)
 
 def linear_schedule(initial_value: float) -> Callable[[float], float]:
 
@@ -61,7 +59,7 @@ def train_model(algorithm, env, model_dir, tb_log_name, schedule):
     if schedule == False:
         lr = 0.001
     else:
-        lr = linear_schedule(0.001)
+        lr = linear_schedule(0.01)
 
     reward_threshold_callback = StopTrainingOnRewardThreshold(reward_threshold=500, verbose=1)
 
@@ -81,8 +79,8 @@ def train_model(algorithm, env, model_dir, tb_log_name, schedule):
 const_lr_rewards = []
 decreasing_lr_rewards = []
 for i in range(5):
-    train_model(DQN, vec_env, model1_dir, "custom_cartpole_dqn", schedule=False) # trains in roughly 2.36 million timesteps
-    train_model(DQN, vec_env, model2_dir, "custom_cartpole_dqn_linear_lr", schedule=True) # trains in roughky 1.792 million timesteps
+    train_model(DQN, vec_env, model1_dir, "custom_cartpole_dqn", schedule=False)
+    train_model(DQN, vec_env, model2_dir, "custom_cartpole_dqn_linear_lr", schedule=True)
 
     dqn_model1 = DQN.load(os.path.join(base_dir, model1_dir + '_best', 'best_model'))
     dqn_model2 = DQN.load(os.path.join(base_dir, model2_dir + '_best', 'best_model'))

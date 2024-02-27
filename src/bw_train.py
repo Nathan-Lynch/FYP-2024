@@ -8,12 +8,12 @@ from typing import Callable
 import os
 import numpy as np
 
-#base_dir = '/home/nl6/FYP/FYP-2024/trained_models'
-base_dir = 'C:/Users/35385/Desktop/FYP-2024/trained_models'
+base_dir = '/home/nl6/FYP/FYP-2024/trained_models'
+#base_dir = 'C:/Users/35385/Desktop/FYP-2024/trained_models'
 model1_dir = "trained_bw_ppo_model"
 model2_dir = "trained_bw_ppo_linear_lr_model"
-logdir = 'C:/Users/35385/Desktop/FYP-2024/logs/bipedal_walker'
-#logdir = "/home/nl6/FYP/FYP-2024/logs/bipedal_walker"
+#logdir = 'C:/Users/35385/Desktop/FYP-2024/logs/bipedal_walker'
+logdir = "/home/nl6/FYP/FYP-2024/logs/bipedal_walker"
 
 TIMESTEPS = 5_000_000
 
@@ -46,14 +46,14 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
 def train_model(algorithm, env, model_dir, tb_log_name, schedule):
 
     if schedule == False:
-        lr = 0.001
+        lr = 0.003
     else:
-        lr = linear_schedule(0.001)
+        lr = linear_schedule(0.03)
 
     reward_threshold_callback = StopTrainingOnRewardThreshold(reward_threshold=300, verbose=1)
 
     eval_callback = EvalCallback(env, best_model_save_path=os.path.join(base_dir, model_dir + '_best'),
-                                 log_path=logdir, eval_freq=25000, n_eval_episodes=25,
+                                 log_path=logdir, eval_freq=5000, n_eval_episodes=10,
                                  deterministic=True, render=False, callback_after_eval=reward_threshold_callback)
 
     model = algorithm("MlpPolicy", env, verbose=0, tensorboard_log=logdir, learning_rate=lr)
