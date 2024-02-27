@@ -18,7 +18,7 @@ logdir = "/home/nl6/FYP/FYP-2024/logs/bipedal_walker"
 TIMESTEPS = 5_000_000
 
 env = gym.make("BipedalWalker-v3", render_mode=None)
-vec_env = make_vec_env("BipedalWalker-v3", n_envs = 16)
+vec_env = make_vec_env("BipedalWalker-v3", n_envs = 8)
 
 def linear_schedule(initial_value: float) -> Callable[[float], float]:
 
@@ -46,9 +46,9 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
 def train_model(algorithm, env, model_dir, tb_log_name, schedule):
 
     if schedule == False:
-        lr = 0.003
+        lr = 0.0003
     else:
-        lr = linear_schedule(0.03)
+        lr = linear_schedule(0.003)
 
     reward_threshold_callback = StopTrainingOnRewardThreshold(reward_threshold=300, verbose=1)
 
