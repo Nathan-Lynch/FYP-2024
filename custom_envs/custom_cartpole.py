@@ -15,17 +15,17 @@ class CustomCartPoleEnv(CartPoleEnv):
 
     def reset(self, **kwargs):
         self.length = np.random.uniform(0.3, 0.7)
+        self.total_reward = 0
         observation = super().reset(**kwargs)
-        self.render_mode = 0
         return observation
     
     def step(self, action):
         observation, reward, terminated, truncated, info = super().step(action)
         self.total_reward += reward
         if self.total_reward >= 500:
-            self.reset()
-        else:
-            pass
+            self.total_reward = 0
+            truncated = True
+
         return observation, reward, terminated, truncated, info
     
     def render(self):

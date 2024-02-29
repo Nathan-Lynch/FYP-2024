@@ -2,11 +2,12 @@ import gymnasium as gym
 from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import EvalCallback, CallbackList, StopTrainingOnRewardThreshold
 from stable_baselines3.common.env_util import make_vec_env
-from custom_callbacks import RewardLossCallback
-from evaluate_model import evaluate_model
 from typing import Callable
 import os
 import numpy as np
+from custom_callbacks import RewardLossCallback
+from evaluate_model import evaluate_model
+
 
 import sys
 sys.path.append("/home/nl6/FYP/FYP-2024/")
@@ -79,7 +80,7 @@ def train_model(algorithm, env, model_dir, tb_log_name, schedule):
 const_lr_rewards = []
 decreasing_lr_rewards = []
 for i in range(5):
-    train_model(DQN, vec_env, model1_dir, "custom_cartpole_dqn", schedule=False)
+    train_model(DQN, env, model1_dir, "custom_cartpole_dqn", schedule=False)
     train_model(DQN, vec_env, model2_dir, "custom_cartpole_dqn_linear_lr", schedule=True)
 
     dqn_model1 = DQN.load(os.path.join(base_dir, model1_dir + '_best', 'best_model'))
