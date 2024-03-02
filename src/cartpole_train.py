@@ -1,19 +1,22 @@
 import gymnasium as gym
 from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import CallbackList, EvalCallback, StopTrainingOnRewardThreshold
-from custom_callbacks import RewardLossCallback
 from stable_baselines3.common.env_util import make_vec_env
 from typing import Callable, Optional
 from evaluate_model import evaluate_model
 import os
 import numpy as np
+from utils import AdaptiveLearningRateScheduler
+from custom_callbacks import AdaptiveLRCallback
 
-base_dir = '/home/nl6/FYP/FYP-2024/trained_models'
+#base_dir = '/home/nl6/FYP/FYP-2024/trained_models'
 #base_dir = 'C:/Users/natha/Desktop/FYP-2024/trained_models'
+base_dir = 'C:/Users/35385/Desktop/FYP-2024/trained_models'
 model_dir = "trained_cartpole_dqn_model"
 model2_dir = "trained_cartpole_dqn_linear_lr_model"
 #logdir = 'C:/Users/natha/Desktop/FYP-2024/logs/cartpole/'
-logdir = "/home/nl6/FYP/FYP-2024/logs/cartpole"
+#logdir = "/home/nl6/FYP/FYP-2024/logs/cartpole"
+logdir = "C:/Users/35385/Desktop/FYP-2024/logs/test"
 
 TIMESTEPS = 5_000_000
 
@@ -45,24 +48,25 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
 
 def train_model(algorithm, env, model_dir, tb_log_name, schedule):
 
-    if schedule == False:
+    '''if schedule == False:
         lr = 0.001
     else:
-        lr = linear_schedule(0.01)
+        lr = linear_schedule(0.01)'''
 
     reward_threshold_callback = StopTrainingOnRewardThreshold(reward_threshold=500, verbose=1)
 
     eval_callback = EvalCallback(env, best_model_save_path=os.path.join(base_dir, model_dir + '_best'),
                                  log_path=logdir, eval_freq=5000, n_eval_episodes=10,
                                  deterministic=True, render=False, callback_after_eval=reward_threshold_callback)
-    
-    rl = RewardLossCallback()
 
-    model = algorithm("MlpPolicy", env, verbose=0, tensorboard_log=logdir, learning_rate=lr)
+    lr_scheduler = AdaptiveLearningRateScheduler()
+    adaptive_lr_callback = AdaptiveLRCallback(lr_scheduler)
+    model = algorithm("MlpPolicy", env, verbose=1, tensorboard_log=logdir, learning_rate=lr_scheduler.get_current_lr())
 
-    callback = CallbackList([eval_callback])
+    callback = CallbackList([eval_callback, adaptive_lr_callback])
 
     model.learn(total_timesteps=TIMESTEPS, progress_bar=True, tb_log_name=tb_log_name, callback=callback)
+    model
     return model
 
 const_lr_rewards = []
