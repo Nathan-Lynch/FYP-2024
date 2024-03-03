@@ -1,7 +1,8 @@
 from stable_baselines3 import DQN, PPO
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
-from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
+from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold, CallbackList
+from custom_callbacks import AdaptiveLRCallback
 from typing import Callable
 import numpy as np
 import math
@@ -30,7 +31,7 @@ def linear_schedule(initial_value: float, final_value: float) -> Callable[[float
 
     return func
 
-def exponential_schedule(initial_value: float, decay_factor: float, final_value: float) -> Callable[[float], float]:
+def exponential_schedule(initial_value: float, final_value: float, decay_factor: float) -> Callable[[float], float]:
 
     """
     Exponential learning rate schedule.
@@ -51,28 +52,32 @@ def exponential_schedule(initial_value: float, decay_factor: float, final_value:
     return func
 
 class AdaptiveLearningRateScheduler:
-    def __init__(self, initial_lr=0.001, increase_factor=1.0001, decrease_factor=0.9999):
+    def __init__(self, initial_lr, top_lr, bottom_lr, increase_factor, decrease_factor):
         self.initial_lr = initial_lr
         self.current_lr = initial_lr
+        self.top_lr = top_lr
+        self.bottom_lr = bottom_lr
         self.increase_factor = increase_factor
         self.decrease_factor = decrease_factor
-        self.last_reward = None
+        self.episode_rewards = []
 
     def adjust_learning_rate(self, reward):
-        if self.last_reward is not None:
-            reward_diff = reward - self.last_reward
-            if reward_diff >= 0:
-                self.current_lr *= self.increase_factor
+        self.episode_rewards.append(reward)
+        if len(self.episode_rewards) > 0:
+            reward_loss = reward - np.mean(self.episode_rewards)
+            if reward_loss >= 0:
+                self.current_lr = min(self.current_lr * self.increase_factor, self.top_lr)
             else:
-                self.current_lr *= self.decrease_factor
-            # LOOK INTO FOR MIN/MAX learning rates
-            # self.current_lr = max(min_lr, min(self.current_lr, max_lr))
-        self.last_reward = reward
+                self.current_lr = max(self.current_lr * self.decrease_factor, self.bottom_lr)
 
     def get_current_lr(self):
         return self.current_lr
+    
+    def reset_episode_rewards(self):
+        print(self.episode_rewards)
+        self.episode_rewards = []
 
-def create_objective(env_name, model_name, timesteps, logdir, callbacks, lr_schedule, min_lr, max_lr):
+def create_objective(env_name, model_name, timesteps, logdir, callback, lr_schedule, min_lr, max_lr):
     '''
     Creates a custom objective function for optimization based on the environment, model, and learning rate schedule
 
@@ -81,12 +86,12 @@ def create_objective(env_name, model_name, timesteps, logdir, callbacks, lr_sche
     #TODO 
     '''
     def objective(trial):
-        env = make_vec_env(env_name, n_envs = 16)
+        env = make_vec_env(env_name, n_envs = 1)
         if lr_schedule == "constant":
             learning_rate = trial.suggest_float('learning_rate', min_lr, max_lr, log=True)
 
             model = model_name("MlpPolicy", env, learning_rate=learning_rate, verbose=0, tensorboard_log = logdir)
-            model.learn(total_timesteps=timesteps, progress_bar=True, callback=callbacks, tb_log_name = "constant_lr")
+            model.learn(total_timesteps=timesteps, progress_bar=True, callback=callback, tb_log_name = "constant_lr")
 
             mean_reward = evaluate_policy(model, env, n_eval_episodes=10)[0]
             return mean_reward
@@ -100,11 +105,44 @@ def create_objective(env_name, model_name, timesteps, logdir, callbacks, lr_sche
             schedule = linear_schedule(initial_lr, final_lr)
 
             model = model_name("MlpPolicy", env, learning_rate=schedule, verbose=0, tensorboard_log = logdir)
-            model.learn(total_timesteps=timesteps, progress_bar=True, callback=callbacks, tb_log_name = "linear_lr")
+            model.learn(total_timesteps=timesteps, progress_bar=True, callback=callback, tb_log_name = "linear_lr")
 
             mean_reward = evaluate_policy(model, env, n_eval_episodes=10)[0]
             return mean_reward
-        
+
+        elif lr_schedule == "exponential":
+            initial_lr = trial.suggest_float('initial_lr', min_lr, max_lr, log=True)
+            final_lr = trial.suggest_float('final_lr', min_lr/10 , min_lr, log=True)
+            decay_rate = trial.suggest_float('decay_rate', 0.01, 0.99)
+
+            final_lr = min(final_lr, initial_lr)
+
+            schedule = exponential_schedule(initial_lr, final_lr, decay_rate)
+
+            model = model_name("MlpPolicy", env, learning_rate=schedule, verbose=0, tensorboard_log = logdir)
+            model.learn(total_timesteps=timesteps, progress_bar=True, callback=callback, tb_log_name = "exponential_lr")
+
+            mean_reward = evaluate_policy(model, env, n_eval_episodes=10)[0]
+            return mean_reward
+
+        else:
+            initial_lr = trial.suggest_float('initial_lr', min_lr, max_lr, log=True)
+            top_lr = trial.suggest_float('top_lr', initial_lr*2, initial_lr*10,log=True)
+            bottom_lr = trial.suggest_float('bottom_lr', initial_lr/10, initial_lr/2, log=True)
+            adjustment_factor = trial.suggest_float('adjustment_factor', 0.01, 0.1, log=True)
+
+            schedule = AdaptiveLearningRateScheduler(initial_lr=initial_lr, top_lr = top_lr, bottom_lr = bottom_lr, increase_factor=1+adjustment_factor, decrease_factor=1-adjustment_factor)
+            scheduler = AdaptiveLRCallback(schedule)
+
+            callback.append(scheduler)
+            callbacks = CallbackList(callback)
+
+            model = model_name("MlpPolicy", env, learning_rate=schedule.get_current_lr(), verbose=0, tensorboard_log = logdir)
+            model.learn(total_timesteps=timesteps, progress_bar=True, callback=callbacks, tb_log_name = "adaptive_lr")
+
+            mean_reward = evaluate_policy(model, env, n_eval_episodes=10)[0]
+            return mean_reward
+
     return objective
 
 
