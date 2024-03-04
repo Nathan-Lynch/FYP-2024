@@ -60,15 +60,6 @@ class CustomCartPoleEnvV1(CustomCartPoleEnvV0):
         observation = super().reset(**kwargs)
         return observation
     
-    def step(self, action):
-        observation, reward, terminated, truncated, info = super().step(action)
-        self.total_reward += reward
-        if self.total_reward >= 500:
-            self.total_reward = 0
-            truncated = True
-
-        return observation, reward, terminated, truncated, info
-    
     def render(self):
         super().render()
 

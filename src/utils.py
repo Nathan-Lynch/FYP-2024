@@ -74,7 +74,6 @@ class AdaptiveLearningRateScheduler:
         return self.current_lr
     
     def reset_episode_rewards(self):
-        print(self.episode_rewards)
         self.episode_rewards = []
 
 def create_objective(env_name, model_name, timesteps, logdir, callback, lr_schedule, min_lr, max_lr):
