@@ -8,247 +8,58 @@ from stable_baselines3.common.env_util import make_vec_env
 from utils import create_objective
 
 import sys
-#sys.path.append("/home/nl6/FYP/FYP-2024/")
-sys.path.append("/home/nl6/FYP/FYP-2024")
-from custom_envs.custom_cartpole import CustomCartPoleEnvV0, CustomCartPoleEnvV1
+sys.path.append("C:/Users/natha/Desktop/FYP-2024/")
+#sys.path.append("/home/nl6/FYP/FYP-2024")
+from custom_envs.custom_cartpole import CustomCartPoleEnvV0, CustomCartPoleEnvV1, CustomCartPoleEnvV2
 
-#--------------------------------------------------#
-'''FIX CODE: CURRENT CODE JUST TO PRODUCE RESULTS'''
-#--------------------------------------------------#
+gym.envs.register(
+    id='CustomCartPole-v0',
+    entry_point='custom_envs.custom_cartpole:CustomCartPoleEnvV0',
+)
+gym.envs.register(
+    id='CustomCartPole-v1',
+    entry_point='custom_envs.custom_cartpole:CustomCartPoleEnvV1',
+    )
+gym.envs.register(
+    id='CustomCartPole-v2',
+    entry_point='custom_cartpole:CustomCartPoleEnvV2',
+)
 
-# For each want environment, want constant, linear, exponential, adaptive learning rates
+trained_dir = "C:/Users/natha/Desktop/FYP-2024/trained_models"
+logdir = "C:/Users/natha/Desktop/FYP-2024/logs/"
 
-trained_dir = "/home/nl6/FYP/FYP-2024/trained_models"
-logdir = '/home/nl6/FYP/FYP-2024/logs/cartpole/'
+#trained_dir = "/home/nl6/FYP/FYP-2024/trained_models"
+#logdir = '/home/nl6/FYP/FYP-2024/logs/cartpole/'
 
 model_constant_dir = "cartpole_constant_lr"
 model_linear_dir = "cartpole_linear_lr"
 model_exponential_dir = "cartpole_exponential_lr"
 model_adaptive_dir = "cartpole_adaptive_lr"
 
-# Default cartpole
-
-env = gym.make("CartPole-v1", render_mode = None)
-vec_env = make_vec_env("CartPole-v1", n_envs = 1)
+cartpole_envs = ["CartPole-v1", "CustomCartPole-v0", "CustomCartPole-v1", "CustomCartPole-v2"]
+cartpole_dirs = ["cartpole_constant_lr", "cartpole_linear_lr", "cartpole_exponential_lr", "cartpole_adaptive_lr"]
+lr_strategies = ["constant", "linear", "exponential", "adaptive"]
 
 cartpole_timesteps = 250000
-reward_cb = StopTrainingOnRewardThreshold(reward_threshold = 500, verbose = 1) # stays the same for all cartpole environments
+cartpole_min_lr = 0.0001 # 1 order of magnitude less than default
+cartpole_max_lr = 0.01 # 1 order of magnitude greater than default
 
-# constant lr
-# maybe vec_env???
-'''eval_cb = EvalCallback(vec_env, best_model_save_path=os.path.join(trained_dir, model_constant_dir + '_best'),
-                        log_path=logdir, eval_freq=10000, n_eval_episodes=10,
+def train_model(env_name, timesteps, model, lr_schedule, min_lr, max_lr):
+    vec_env = make_vec_env(env_name, n_envs=1)
+    eval_cb = EvalCallback(vec_env, best_model_save_path=os.path.join(trained_dir, env_name, lr_schedule + '_best'),
+                        log_path=logdir + env_name, eval_freq=5000, n_eval_episodes=10,
                         deterministic=True, render=False)
 
-callbacks = CallbackList([eval_cb])
-
-obj = create_objective("CartPole-v1", DQN, cartpole_timesteps, logdir, callbacks, "constant", 0.0001, 0.01)
-
-cartpole_study = optuna.create_study(direction = "maximize")
-cartpole_study.optimize(obj, n_trials = 10)
-
-with open("/home/nl6/FYP/FYP-2024/saved_studies/constant_lr_cartpole-v1.pkl", "wb") as fout:
-    pickle.dump(cartpole_study, fout)
-
-# linear decreasing lr
-eval_cb = EvalCallback(vec_env, best_model_save_path=os.path.join(trained_dir, model_linear_dir + '_best'),
-                        log_path=logdir, eval_freq=5000, n_eval_episodes=10,
-                        deterministic=True, render=False)
-
-callbacks = CallbackList([eval_cb])
-
-obj = create_objective("CartPole-v1", DQN, cartpole_timesteps, logdir, callbacks, "linear", 0.0001, 0.01)
-
-cartpole_study = optuna.create_study(direction = "maximize")
-cartpole_study.optimize(obj, n_trials = 10)
-
-with open("/home/nl6/FYP/FYP-2024/saved_studies/linear_lr_cartpole-v1.pkl", "wb") as fout:
-    pickle.dump(cartpole_study, fout)
-
-# exponential decreasing lr
-eval_cb = EvalCallback(vec_env, best_model_save_path=os.path.join(trained_dir, model_exponential_dir + '_best'),
-                        log_path=logdir, eval_freq=5000, n_eval_episodes=10,
-                        deterministic=True, render=False)
-
-callbacks = CallbackList([eval_cb])
-
-obj = create_objective("CartPole-v1", DQN, cartpole_timesteps, logdir, callbacks, "exponential", 0.0001, 0.01)
-
-cartpole_study = optuna.create_study(direction = "maximize")
-cartpole_study.optimize(obj, n_trials = 10)
-
-with open("/home/nl6/FYP/FYP-2024/saved_studies/exponential_lr_cartpole-v1.pkl", "wb") as fout:
-    pickle.dump(cartpole_study, fout)
-
-# Adaptive lr: no sense  for default cartpole: 
-eval_cb = EvalCallback(vec_env, best_model_save_path=os.path.join(trained_dir, model_adaptive_dir + '_best'),
-                        log_path=logdir, eval_freq=5000, n_eval_episodes=10,
-                        deterministic=True, render=False)
-
-callback_list = [eval_cb]
-
-obj = create_objective("CartPole-v1", DQN, cartpole_timesteps, logdir, callback_list, "adaptive", 0.0001, 0.01)
-
-cartpole_study = optuna.create_study(direction = "maximize")
-cartpole_study.optimize(obj, n_trials = 10)
-
-with open("/home/nl6/FYP/FYP-2024/saved_studies/adaptive_lr_cartpole-v1.pkl", "wb") as fout:
-    pickle.dump(cartpole_study, fout)
-
-# CustomCartpole-v0
-
-trained_dir = "/home/nl6/FYP/FYP-2024/trained_models"
-logdir = '/home/nl6/FYP/FYP-2024/logs/custom_cartpole_v0/'
-
-model_constant_dir = "custom_cartpole-v0_constant_lr"
-model_linear_dir = "custom_cartpole-v0_linear_lr"
-model_exponential_dir = "custom_cartpole-v0_exponential_lr"
-model_adaptive_dir = "custom_cartpole-v0_adaptive_lr"
-
-gym.envs.register(
-    id='CustomCartPole-v0',
-    entry_point='custom_envs.custom_cartpole:CustomCartPoleEnvV0',
-    )
-
-env = gym.make("CustomCartPole-v0", render_mode = None)
-vec_env = make_vec_env("CustomCartPole-v0", n_envs = 1)
-
-# constant lr
-# maybe vec_env???
-eval_cb = EvalCallback(vec_env, best_model_save_path=os.path.join(trained_dir, model_constant_dir + '_best'),
-                        log_path=logdir, eval_freq=5000, n_eval_episodes=10,
-                        deterministic=True, render=False)
-
-callbacks = CallbackList([eval_cb])
-
-obj = create_objective("CustomCartPole-v0", DQN, cartpole_timesteps, logdir, callbacks, "constant", 0.0001, 0.01)
-
-cartpole_study = optuna.create_study(direction = "maximize")
-cartpole_study.optimize(obj, n_trials = 10)
-
-with open("/home/nl6/FYP/FYP-2024/saved_studies/constant_lr_custom_cartpole-v0.pkl", "wb") as fout:
-    pickle.dump(cartpole_study, fout)
-
-# linear decreasing lr
-eval_cb = EvalCallback(vec_env, best_model_save_path=os.path.join(trained_dir, model_linear_dir + '_best'),
-                        log_path=logdir, eval_freq=5000, n_eval_episodes=10,
-                        deterministic=True, render=False)
-
-callbacks = CallbackList([eval_cb])
-
-obj = create_objective("CustomCartPole-v0", DQN, cartpole_timesteps, logdir, callbacks, "linear", 0.0001, 0.01)
-
-cartpole_study = optuna.create_study(direction = "maximize")
-cartpole_study.optimize(obj, n_trials = 10)
-
-with open("/home/nl6/FYP/FYP-2024/saved_studies/linear_lr_custom_cartpole-v0.pkl", "wb") as fout:
-    pickle.dump(cartpole_study, fout)
-
-# exponential decreasing lr
-eval_cb = EvalCallback(vec_env, best_model_save_path=os.path.join(trained_dir, model_exponential_dir + '_best'),
-                        log_path=logdir, eval_freq=5000, n_eval_episodes=10,
-                        deterministic=True, render=False)
-
-callbacks = CallbackList([eval_cb])
-
-obj = create_objective("CustomCartPole-v0", DQN, cartpole_timesteps, logdir, callbacks, "exponential", 0.0001, 0.01)
-
-cartpole_study = optuna.create_study(direction = "maximize")
-cartpole_study.optimize(obj, n_trials = 10)
-
-with open("/home/nl6/FYP/FYP-2024/saved_studies/exponential_lr_custom_cartpole-v0.pkl", "wb") as fout:
-    pickle.dump(cartpole_study, fout)
-
-# Adaptive lr
-eval_cb = EvalCallback(vec_env, best_model_save_path=os.path.join(trained_dir, model_adaptive_dir + '_best'),
-                        log_path=logdir, eval_freq=5000, n_eval_episodes=10,
-                        deterministic=True, render=False)
-
-callback_list = [eval_cb]
-
-obj = create_objective("CustomCartPole-v0", DQN, cartpole_timesteps, logdir, callback_list, "adaptive", 0.0001, 0.01)
-
-cartpole_study = optuna.create_study(direction = "maximize")
-cartpole_study.optimize(obj, n_trials = 10)
-
-with open("/home/nl6/FYP/FYP-2024/saved_studies/adaptive_lr_custom_cartpole-v0.pkl", "wb") as fout:
-    pickle.dump(cartpole_study, fout)'''
-
-# CustomCartpole-v1
-
-trained_dir = "/home/nl6/FYP/FYP-2024/trained_models"
-logdir = '/home/nl6/FYP/FYP-2024/logs/custom_cartpole_v1/'
-
-model_constant_dir = "custom_cartpole-v1_constant_lr"
-model_linear_dir = "custom_cartpole-v1_linear_lr"
-model_exponential_dir = "custom_cartpole-v1_exponential_lr"
-model_adaptive_dir = "custom_cartpole-v1_adaptive_lr"
-
-gym.envs.register(
-    id='CustomCartPole-v1',
-    entry_point='custom_envs.custom_cartpole:CustomCartPoleEnvV1',
-    )
-
-env = gym.make("CustomCartPole-v1", render_mode = None)
-vec_env = make_vec_env("CustomCartPole-v1", n_envs = 1)
-
-# constant lr
-# maybe vec_env???
-eval_cb = EvalCallback(vec_env, best_model_save_path=os.path.join(trained_dir, model_constant_dir + '_best'),
-                        log_path=logdir, eval_freq=5000, n_eval_episodes=10,
-                        deterministic=True, render=False)
-
-callbacks = CallbackList([eval_cb])
-
-obj = create_objective("CustomCartPole-v1", DQN, cartpole_timesteps, logdir, callbacks, "constant", 0.0001, 0.01)
-
-cartpole_study = optuna.create_study(direction = "maximize")
-cartpole_study.optimize(obj, n_trials = 10)
-
-with open("/home/nl6/FYP/FYP-2024/saved_studies/constant_lr_custom_cartpole-v1.pkl", "wb") as fout:
-    pickle.dump(cartpole_study, fout)
-
-# linear decreasing lr
-eval_cb = EvalCallback(vec_env, best_model_save_path=os.path.join(trained_dir, model_linear_dir + '_best'),
-                        log_path=logdir, eval_freq=5000, n_eval_episodes=10,
-                        deterministic=True, render=False)
-
-callbacks = CallbackList([eval_cb])
-
-obj = create_objective("CustomCartPole-v1", DQN, cartpole_timesteps, logdir, callbacks, "linear", 0.0001, 0.01)
-
-cartpole_study = optuna.create_study(direction = "maximize")
-cartpole_study.optimize(obj, n_trials = 10)
-
-with open("/home/nl6/FYP/FYP-2024/saved_studies/linear_lr_custom_cartpole-v1.pkl", "wb") as fout:
-    pickle.dump(cartpole_study, fout)
-
-# exponential decreasing lr
-eval_cb = EvalCallback(vec_env, best_model_save_path=os.path.join(trained_dir, model_exponential_dir + '_best'),
-                        log_path=logdir, eval_freq=5000, n_eval_episodes=10,
-                        deterministic=True, render=False)
-
-callbacks = CallbackList([eval_cb])
-
-obj = create_objective("CustomCartPole-v1", DQN, cartpole_timesteps, logdir, callbacks, "exponential", 0.0001, 0.01)
-
-cartpole_study = optuna.create_study(direction = "maximize")
-cartpole_study.optimize(obj, n_trials = 10)
-
-with open("/home/nl6/FYP/FYP-2024/saved_studies/exponential_lr_custom_cartpole-v1.pkl", "wb") as fout:
-    pickle.dump(cartpole_study, fout)
-
-# Adaptive lr
-eval_cb = EvalCallback(vec_env, best_model_save_path=os.path.join(trained_dir, model_adaptive_dir + '_best'),
-                        log_path=logdir, eval_freq=5000, n_eval_episodes=10,
-                        deterministic=True, render=False)
-
-callback_list = [eval_cb]
-
-obj = create_objective("CustomCartPole-v1", DQN, cartpole_timesteps, logdir, callback_list, "adaptive", 0.0001, 0.01)
-
-cartpole_study = optuna.create_study(direction = "maximize")
-cartpole_study.optimize(obj, n_trials = 10)
-
-with open("/home/nl6/FYP/FYP-2024/saved_studies/adaptive_lr_custom_cartpole-v1.pkl", "wb") as fout:
-    pickle.dump(cartpole_study, fout)
+    callbacks = [eval_cb]
+
+    obj = create_objective(env_name, model, timesteps, logdir + env_name, callbacks, lr_schedule, min_lr, max_lr)
+    study = optuna.create_study(study_name = env_name + lr_schedule, direction = "maximize")
+    study.optimize(obj, n_trials = 10)
+
+    with open("C:/Users/natha/Desktop/FYP-2024/saved_studies/" + lr_schedule + "_lr_" + env_name + ".pkl", "wb") as fout:
+        pickle.dump(study, fout)
+
+# loop for cartpole experiments, trains new model for each env and lr strategy
+for env in cartpole_envs:
+    for strategy in  lr_strategies:
+        train_model(env, cartpole_timesteps, DQN, strategy, cartpole_min_lr, cartpole_max_lr)

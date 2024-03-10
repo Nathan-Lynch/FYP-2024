@@ -6,13 +6,12 @@ from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewar
 from stable_baselines3 import DQN
 from stable_baselines3.common.env_util import make_vec_env
 import os
-import pickle as pkl
 
 import sys
 #sys.path.append("/home/nl6/FYP/FYP-2024/")
 sys.path.append("C:/Users/35385/Desktop/FYP-2024")
 
-from custom_envs.custom_cartpole import CustomCartPoleEnvV0, CustomCartPoleEnvV1
+from custom_envs.custom_cartpole import CustomCartPoleEnvV0, CustomCartPoleEnvV1, CustomCartPoleEnvV2
 
 gym.envs.register(
     id='CustomCartPole-v0',
@@ -23,6 +22,11 @@ gym.envs.register(
     id='CustomCartPole-v1',
     entry_point='custom_envs.custom_cartpole:CustomCartPoleEnvV1',
     )
+
+gym.envs.register(
+    id='CustomCartPole-v2',
+    entry_point='custom_envs.custom_cartpole:CustomCartPoleEnvV2',
+)
 
 def objective_constant(trial):
     learning_rate = trial.suggest_float('learning_rate', 0.0001, 0.01, log=True)
@@ -41,18 +45,18 @@ def objective_constant(trial):
     return mean_reward
 
 # maximizes reward
-study = optuna.create_study(study_name="TEST", direction='maximize', load_if_exists=True)
+#study = optuna.create_study(study_name="TEST", direction='maximize', load_if_exists=True)
 # Optimize the learning rate
-study.optimize(objective_constant, n_trials=2)
+#study.optimize(objective_constant, n_trials=2)
 
 # SAVING STUDIES
-with open("C:/Users/natha/Desktop/FYP-2024/saved_studies/Test_study.pkl", "wb") as fout:
-    pkl.dump(study, fout)
+#with open("C:/Users/natha/Desktop/FYP-2024/saved_studies/Test_study.pkl", "wb") as fout:
+#    pkl.dump(study, fout)
 
-load_study = pkl.load(open("C:/Users/natha/Desktop/FYP-2024/saved_studies/Test_study.pkl", "rb"))
+#load_study = pkl.load(open("C:/Users/natha/Desktop/FYP-2024/saved_studies/Test_study.pkl", "rb"))
 
-print('Number of finished trials:', len(load_study.trials))
-print('Best trial:', load_study.best_trial.params)
+#print('Number of finished trials:', len(load_study.trials))
+#print('Best trial:', load_study.best_trial.params)
 
 #fig1 = plot_optimization_history(load_study)
 #fig2 = plot_param_importances(study)
@@ -73,3 +77,23 @@ for _ in range(1000):
       observation, info = env.reset()
 
 env.close()'''
+
+#load_study = pkl.load(open("C:/Users/natha/Desktop/FYP-2024/saved_studies/exponential_lr_custom_cartpole-v0.pkl", "rb"))
+#print(load_study.best_trial.number)
+#print(load_study.best_trial.params)
+
+#load_study = pkl.load(open("C:/Users/natha/Desktop/FYP-2024/saved_studies/adaptive_lr_custom_cartpole-v0.pkl", "rb"))
+#print(load_study.best_trial.number)
+#print(load_study.best_trial.params)
+
+import gymnasium as gym
+env = gym.make("CustomCartPole-v2", render_mode="human")
+observation, info = env.reset(seed=42)
+for _ in range(1000):
+   action = env.action_space.sample()  # this is where you would insert your policy
+   observation, reward, terminated, truncated, info = env.step(action)
+
+   if terminated or truncated:
+      observation, info = env.reset()
+
+env.close()
