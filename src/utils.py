@@ -51,7 +51,7 @@ def exponential_schedule(initial_value: float, final_value: float, decay_factor:
 
     return func
 
-class AdaptiveLearningRateScheduler:
+class AdaptiveLearningRate:
     def __init__(self, initial_lr, top_lr, bottom_lr, increase_factor, decrease_factor):
         self.initial_lr = initial_lr
         self.current_lr = initial_lr
@@ -130,7 +130,7 @@ def create_objective(env_name, model_name, timesteps, logdir, callback, lr_sched
             bottom_lr = trial.suggest_float('bottom_lr', initial_lr/10, initial_lr/2, log=True)
             adjustment_factor = trial.suggest_float('adjustment_factor', 0.01, 0.1, log=True)
 
-            schedule = AdaptiveLearningRateScheduler(initial_lr=initial_lr, top_lr = top_lr, bottom_lr = bottom_lr, increase_factor=1+adjustment_factor, decrease_factor=1-adjustment_factor)
+            schedule = AdaptiveLearningRate(initial_lr=initial_lr, top_lr = top_lr, bottom_lr = bottom_lr, increase_factor=1+adjustment_factor, decrease_factor=1-adjustment_factor)
             scheduler = AdaptiveLRCallback(schedule)
 
             callback.append(scheduler)
@@ -143,27 +143,3 @@ def create_objective(env_name, model_name, timesteps, logdir, callback, lr_sched
             return mean_reward
 
     return objective
-
-
-# LOOK INTO: MAY NOT NEED
-def evaluate_model(model, env):
-    results = []
-    for _ in range(10):
-        avg_reward = []
-        for _ in range(5):
-            total_reward = 0
-            observation, info = env.reset()
-
-            truncated = False
-            terminated = False
-
-            while not truncated and not terminated:
-                action, _state = model.predict(observation, deterministic=True)
-                observation, reward, terminated, truncated, _ = env.step(action)
-                total_reward += reward
-
-            if terminated or truncated:
-                avg_reward.append(total_reward)
-        results.append(np.mean(avg_reward))  
-    avg_results = np.mean(results) 
-    return avg_results

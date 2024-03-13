@@ -1,11 +1,13 @@
 import optuna
-from optuna.visualization import plot_optimization_history, plot_param_importances, plot_parallel_coordinate
+from optuna.visualization import plot_contour, plot_edf, plot_hypervolume_history, plot_intermediate_values, plot_optimization_history, plot_terminator_improvement, plot_parallel_coordinate
+from optuna.visualization import plot_param_importances, plot_pareto_front, plot_rank, plot_slice, plot_terminator_improvement, plot_timeline, is_available
 import gymnasium as gym
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from stable_baselines3 import DQN
 from stable_baselines3.common.env_util import make_vec_env
 import os
+import pickle
 
 import sys
 #sys.path.append("/home/nl6/FYP/FYP-2024/")
@@ -78,16 +80,57 @@ for _ in range(1000):
 
 env.close()'''
 
-#load_study = pkl.load(open("C:/Users/natha/Desktop/FYP-2024/saved_studies/exponential_lr_custom_cartpole-v0.pkl", "rb"))
+'''load_study = pickle.load(open("C:/Users/35385/Desktop/FYP-2024/saved_studies/adaptive_lr_custom_cartpole-v0.pkl", "rb"))
+fig1 = plot_contour(load_study)
+fig2 = plot_edf(load_study) # no, probably not important
+#fig3 = plot_hypervolume_history(load_study)
+fig4 = plot_intermediate_values(load_study) # no, nothing showed up
+fig5 = plot_optimization_history(load_study) # no?, doesnt give enough info for 10 trials
+fig6 = plot_parallel_coordinate(load_study) # potentially gives info to talk about
+#fig7 = plot_pareto_front(load_study)
+fig8 = plot_rank(load_study) # potentially
+fig9 = plot_slice(load_study) # no, dont know what plot is showing me
+#fig10 = plot_terminator_improvement(load_study)
+fig11 = plot_timeline(load_study) # no, not important
+fig12 = plot_param_importances(load_study) # maybe
+
+fig1.show()
+fig2.show()
+#fig3.show()
+fig4.show()
+fig5.show()
+fig6.show()
+#fig7.show()
+fig8.show()
+fig9.show()
+#fig10.show()
+fig11.show()
+fig12.show()'''
+
+
+
 #print(load_study.best_trial.number)
 #print(load_study.best_trial.params)
 
-#load_study = pkl.load(open("C:/Users/natha/Desktop/FYP-2024/saved_studies/adaptive_lr_custom_cartpole-v0.pkl", "rb"))
+#load_study = pkl.load(open("C:/Users/natha/Desktop/FYP-2024/saved_studies/adaptive_lr_custom_cartpole-v1.pkl", "rb"))
 #print(load_study.best_trial.number)
 #print(load_study.best_trial.params)
+
+gym.envs.register(
+    id='CustomInvertedDoublePendulum-v0',
+    entry_point='custom_envs.custom_inverted_double_cartpole:CustomInvertedDoublePendulumEnv',
+)
+gym.envs.register(
+    id='CustomInvertedDoublePendulum-v1',
+    entry_point='custom_envs.custom_inverted_double_cartpole:CustomInvertedDoublePendulumEnvV1',
+)
+gym.envs.register(
+    id='CustomBipedalWalker-v0',
+    entry_point='custom_envs.custom_bipedal_walker_env:CustomBipedalWalkerEnv',
+)
 
 import gymnasium as gym
-env = gym.make("CustomCartPole-v2", render_mode="human")
+env = gym.make("CustomInvertedDoublePendulum-v0", render_mode="human")
 observation, info = env.reset(seed=42)
 for _ in range(1000):
    action = env.action_space.sample()  # this is where you would insert your policy
