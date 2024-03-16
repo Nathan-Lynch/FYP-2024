@@ -37,24 +37,39 @@ lr_strategies = ["constant", "linear", "exponential", "adaptive"]
 
 # Maybe put in Utils.py
 def train_model(env_name, timesteps, model, lr_schedule, min_lr, max_lr):
+    '''
+    Creates an Optuna study and trains the model on a given environment.
+    Saves studies in saved_studies directory.
+
+    :param env_name: Name of the environment.
+    :param timesteps: Number of timesteps for training.
+    :param model: Model used for training.
+    :param lr_schedule: Learning rate strategy to br used.
+    :param min_lr: Minimum value allowed for learning rate.
+    :param max_lr: Maximum value allowed for learing rate.
+    '''
+    # Set up environment
     vec_env = make_vec_env(env_name, n_envs=1)
+
+    # Set up callbacks to be used
     eval_cb = EvalCallback(vec_env, best_model_save_path=os.path.join(trained_dir, env_name, lr_schedule + '_best'),
                         log_path=logdir + env_name, eval_freq=5000, n_eval_episodes=10,
                         deterministic=True, render=False)
-
     callbacks = [eval_cb]
 
+    # Creates an Optuna study and runs n_trials for the study
     obj = create_objective(env_name, model, timesteps, logdir + env_name, callbacks, lr_schedule, min_lr, max_lr)
     study = optuna.create_study(study_name = env_name + lr_schedule, direction = "maximize")
     study.optimize(obj, n_trials = 25)
 
+    # Saving the study
     with open("C:/Users/natha/Desktop/FYP-2024/saved_studies/" + lr_schedule + "_lr_" + env_name + ".pkl", "wb") as fout:
         pickle.dump(study, fout)
 
 # Cartpole Experiment Parameters
 cartpole_timesteps = 400000
 cartpole_min_lr = 0.00001 # 1 order of magnitude less than sb3 default
-cartpole_max_lr = 0.1 # 2 orders of magnitude greater than sb3 default
+cartpole_max_lr = 0.01 # 2 orders of magnitude greater than sb3 default
 
 cartpole_envs = ["CartPole-v1", "CustomCartPole-v0", "CustomCartPole-v1", "CustomCartPole-v2"]
 

@@ -1,45 +1,32 @@
 import gymnasium as gym
-from gymnasium.envs.mujoco import InvertedDoublePendulumEnv
+from gymnasium.envs.mujoco.inverted_double_pendulum_v4 import InvertedDoublePendulumEnv
+import mujoco
 import numpy as np
 
 class CustomInvertedDoublePendulumEnv(InvertedDoublePendulumEnv):
-    metadata = {
-        "render_modes": [
-        "human",
-        "rgb_array",
-        "depth_array",
-        ],
-    }
-    def __init__(self, render_mode = "human"):
-        super(CustomInvertedDoublePendulumEnv, self).__init__()
-        self.render_mode = render_mode
-        self.min_pole_len = 0.1
-        self.max_pole_len = 0.5
-        self.xml_file = "inverted_double_pendulum.xml"
+    def __init__(self, render_mode="human"):
+        self.min_pole_len = 0.3  # Minimum pole length
+        self.max_pole_len = 0.8  # Maximum pole length
+        super().__init__(render_mode=render_mode)
+        self.pole1_idx = 3
+        self.pole2_idx = 4
+        self.pole_idx = 1
 
     def reset(self, **kwargs):
-        pole_length1 = np.random.uniform(self.min_pole_length, self.max_pole_length)
-        pole_length2 = np.random.uniform(self.min_pole_length, self.max_pole_length)
+        pole_length1 = np.random.uniform(self.min_pole_len, self.max_pole_len)
+        pole_length2 = np.random.uniform(self.min_pole_len, self.max_pole_len)
+        
+        # Update pole lengths in the model
+        self.update_pole_lengths(pole_length1, pole_length2)
+        
+        return super().reset(**kwargs)
 
-        self._modify_xml(pole_length1, pole_length2)
+    def update_pole_lengths(self, pole_length1, pole_length2):
+        self.model.geom_size[self.pole1_idx, self.pole_idx] = pole_length1
+        self.model.geom_size[self.pole2_idx, self.pole_idx] = pole_length2
 
-        observation = super().reset(**kwargs)
-        return observation
-
-    def _modify_xml(self, pole_length1, pole_length2):
-        with open(self.xml_file, "r") as file:
-            xml_content = file.read()
-
-        xml_content = xml_content.replace('size="0.045 0.3"', f'size="0.045 {pole_length1}"')
-        xml_content = xml_content.replace('size="0.045 0.3"', f'size="0.045 {pole_length2}"')
-
-        with open("inverted_double_pendulum.xml", "w") as file:
-            file.write(xml_content)
-
-        self.model = self.sim.load_model_from_xml(xml_content)
-    
-    def render(self):
-        super().render()
+        # Force the model to recompute derived values after the modification
+        mujoco.mj_forward(self.model, self.data)
 
 gym.envs.register(
     id='CustomInvertedDoublePendulum-v0',

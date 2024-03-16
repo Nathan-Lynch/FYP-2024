@@ -22,7 +22,7 @@ class CustomCartPoleEnvV0(CartPoleEnv):
         self.total_reward = 0
         observation = super().reset(**kwargs)
         return observation
-    
+
     def step(self, action):
         observation, reward, terminated, truncated, info = super().step(action)
         # observation = [Cart Position, Cart Velocity, Pole Angle, Pole Angular Velocity]
@@ -39,7 +39,7 @@ class CustomCartPoleEnvV0(CartPoleEnv):
             truncated = True
 
         return observation, reward, terminated, truncated, info
-    
+
     def render(self):
         super().render()
 
@@ -48,6 +48,7 @@ class CustomCartPoleEnvV1(CustomCartPoleEnvV0):
         "render_modes": ["human", "rgb_array"],
         "render_fps": 50,
     }
+
     def __init__(self, render_mode = "human"):
         super(CustomCartPoleEnvV1, self).__init__()
         self.length = 0.3
@@ -63,7 +64,7 @@ class CustomCartPoleEnvV1(CustomCartPoleEnvV0):
         self.total_reward = 0
         observation = super().reset(**kwargs)
         return observation
-    
+
     def render(self):
         super().render()
 
@@ -72,6 +73,7 @@ class CustomCartPoleEnvV2(CustomCartPoleEnvV0):
         "render_modes": ["human", "rgb_array"],
         "render_fps": 50,
     }
+
     def __init__(self, render_mode = "human"):
         super(CustomCartPoleEnvV2, self).__init__()
         self.length = np.random.uniform(0.3, 0.7)
@@ -83,7 +85,7 @@ class CustomCartPoleEnvV2(CustomCartPoleEnvV0):
         self.total_reward = 0
         observation = super().reset(**kwargs)
         return observation
-    
+
     def render(self):
         super().render()
 
