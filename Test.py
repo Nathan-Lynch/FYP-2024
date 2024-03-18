@@ -11,7 +11,7 @@ import pickle
 
 import sys
 #sys.path.append("/home/nl6/FYP/FYP-2024/")
-sys.path.append("C:/Users/35385/Desktop/FYP-2024")
+sys.path.append("C:/Users/natha/Desktop/FYP-2024")
 
 from custom_envs.custom_cartpole import CustomCartPoleEnvV0, CustomCartPoleEnvV1, CustomCartPoleEnvV2
 
@@ -118,7 +118,7 @@ fig12.show()'''
 
 gym.envs.register(
     id='CustomInvertedDoublePendulum-v0',
-    entry_point='custom_envs.custom_inverted_double_cartpole:CustomInvertedDoublePendulumEnv',
+    entry_point='custom_envs.custom_inverted_double_cartpole:CustomInvertedDoublePendulumEnvV0',
 )
 gym.envs.register(
     id='CustomInvertedDoublePendulum-v1',
@@ -130,9 +130,9 @@ gym.envs.register(
 )
 
 import gymnasium as gym
-env = gym.make("CustomInvertedDoublePendulum-v0", render_mode="human")
+env = gym.make("CustomInvertedDoublePendulum-v1", render_mode="human")
 observation, info = env.reset(seed=42)
-for _ in range(1000):
+for _ in range(100000):
    action = env.action_space.sample()  # this is where you would insert your policy
    observation, reward, terminated, truncated, info = env.step(action)
 
