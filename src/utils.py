@@ -4,6 +4,7 @@ from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold, CallbackList
 from custom_callbacks import AdaptiveLRCallback
 from typing import Callable
+import gymnasium as gym
 import numpy as np
 import math
 import os
@@ -121,7 +122,7 @@ def create_objective(env_name, model_name, timesteps, logdir, callback, lr_sched
 
         :param trial: Trial of Optuna study TODO make clearer
         '''
-        env = make_vec_env(env_name, n_envs = 1)
+        env = gym.make(env_name, render_mode = None)
         if lr_schedule == "constant":
             learning_rate = trial.suggest_float('learning_rate', min_lr, max_lr, log = True)
 

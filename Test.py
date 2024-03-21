@@ -118,19 +118,19 @@ fig12.show()'''
 
 gym.envs.register(
     id='CustomInvertedDoublePendulum-v0',
-    entry_point='custom_envs.custom_inverted_double_cartpole:CustomInvertedDoublePendulumEnvV0',
+    entry_point='custom_envs.custom_inverted_double_pendulum:CustomInvertedDoublePendulumEnvV0',
 )
 gym.envs.register(
     id='CustomInvertedDoublePendulum-v1',
-    entry_point='custom_envs.custom_inverted_double_cartpole:CustomInvertedDoublePendulumEnvV1',
+    entry_point='custom_envs.custom_inverted_double_pendulumCustomInvertedDoublePendulumEnvV1',
 )
 gym.envs.register(
-    id='CustomBipedalWalker-v0',
-    entry_point='custom_envs.custom_bipedal_walker_env:CustomBipedalWalkerEnv',
+    id='CustomInvertedDoublePendulum-v2',
+    entry_point='custom_envs.custom_inverted_double_pendulum:CustomInvertedDoublePendulumEnvV2',
 )
 
 import gymnasium as gym
-env = gym.make("CustomInvertedDoublePendulum-v1", render_mode="human")
+env = gym.make("CustomInvertedDoublePendulum-v2", render_mode="human")
 observation, info = env.reset(seed=42)
 for _ in range(100000):
    action = env.action_space.sample()  # this is where you would insert your policy

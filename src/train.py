@@ -8,9 +8,10 @@ from stable_baselines3.common.env_util import make_vec_env
 from utils import create_objective
 
 import sys
-sys.path.append("C:/Users/35385/Desktop/FYP-2024/")
-#sys.path.append("/home/nl6/FYP/FYP-2024")
+#sys.path.append("C:/Users/35385/Desktop/FYP-2024/")
+sys.path.append("/home/nl6/FYP/FYP-2024")
 from custom_envs.custom_cartpole import CustomCartPoleEnvV0, CustomCartPoleEnvV1, CustomCartPoleEnvV2
+from custom_envs.custom_inverted_double_pendulum import CustomInvertedDoublePendulumEnvV0, CustomInvertedDoublePendulumEnvV1, CustomInvertedDoublePendulumEnvV2
 
 # Registering Custom Environments
 gym.envs.register(
@@ -23,17 +24,17 @@ gym.envs.register(
     )
 gym.envs.register(
     id='CustomCartPole-v2',
-    entry_point='custom_cartpole:CustomCartPoleEnvV2',
+    entry_point='custom_envs.custom_cartpole:CustomCartPoleEnvV2',
 )
 
 # Common between all environments
-trained_dir = "C:/Users/35385/Desktop/FYP-2024/trained_models"
-logdir = "C:/Users/35385/Desktop/FYP-2024/logs/"
+#trained_dir = "C:/Users/35385/Desktop/FYP-2024/trained_models"
+#logdir = "C:/Users/35385/Desktop/FYP-2024/logs/"
 
 lr_strategies = ["constant", "linear", "exponential", "adaptive"]
 
-#trained_dir = "/home/nl6/FYP/FYP-2024/trained_models"
-#logdir = '/home/nl6/FYP/FYP-2024/logs/cartpole/'
+trained_dir = "/home/nl6/FYP/FYP-2024/trained_models"
+logdir = '/home/nl6/FYP/FYP-2024/logs/'
 
 # Maybe put in Utils.py
 def train_model(env_name, timesteps, model, lr_schedule, min_lr, max_lr):
@@ -63,7 +64,7 @@ def train_model(env_name, timesteps, model, lr_schedule, min_lr, max_lr):
     study.optimize(obj, n_trials = 25)
 
     # Saving the study
-    with open("C:/Users/natha/Desktop/FYP-2024/saved_studies/" + lr_schedule + "_lr_" + env_name + ".pkl", "wb") as fout:
+    with open("/home/nl6/FYP/FYP-2024/saved_studies/" + lr_schedule + "_lr_" + env_name + ".pkl", "wb") as fout:
         pickle.dump(study, fout)
 
 # Cartpole Experiment Parameters
@@ -77,6 +78,19 @@ cartpole_envs = ["CartPole-v1", "CustomCartPole-v0", "CustomCartPole-v1", "Custo
 for env in cartpole_envs:
     for strategy in  lr_strategies:
         train_model(env, cartpole_timesteps, DQN, strategy, cartpole_min_lr, cartpole_max_lr)
+
+gym.envs.register(
+    id='CustomInvertedDoublePendulum-v0',
+    entry_point='custom_envs.custom_inverted_double_pendulum:CustomInvertedDoublePendulumEnvV0',
+)
+gym.envs.register(
+    id='CustomInvertedDoublePendulum-v1',
+    entry_point='custom_envs.custom_inverted_double_pendulum:CustomInvertedDoublePendulumEnvV1',
+)
+gym.envs.register(
+    id='CustomInvertedDoublePendulum-v2',
+    entry_point='custom_envs.custom_inverted_double_pendulum:CustomInvertedDoublePendulumEnvV2',
+)
 
 # IDP Experiment Parameters
 idp_timesteps = 1000000
