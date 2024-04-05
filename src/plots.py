@@ -22,8 +22,8 @@ def plot_experiemnt_reward_data(env_name, env_data):
     plt.xlabel("steps")
     plt.ylabel("Average Reward")
     plt.legend()
-    plt.grid(visible = True, axis = "both", color="grey", linewidth = 1, alpha = 0.5) # Adds grid lines on plot for clarity
-    plt.savefig(f"C:/Users/35385/Desktop/FYP-2024/plots/{filename}")
+    plt.grid(visible = True, axis = "both", color="grey", linewidth = 1, alpha = 0.5)
+    plt.savefig(f"C:/Users/natha/Desktop/FYP-2024/plots/{filename}")
 
 def read_rewards(dir):
     '''
@@ -62,6 +62,7 @@ def average_reward(subdirs, strategies):
                 rewards = read_rewards(logdir)
 
                 for step, reward in rewards.items():
+                    step = round(step/10000)*10000
                     if step not in env_step_rewards:
                         env_step_rewards[step] = 0
                         env_step_counts[step] = 0
@@ -75,7 +76,7 @@ def average_reward(subdirs, strategies):
     return env_rewards
 
 # Directories for extracting data
-logdir = "C:/Users/35385/Desktop/FYP-2024/logs"
+logdir = "C:/Users/natha/Desktop/FYP-2024/logs"
 subdirs = [os.path.join(logdir, d) for d in os.listdir(logdir) if os.path.isdir(os.path.join(logdir, d))]
 
 # Learning rate strategies used within experiments

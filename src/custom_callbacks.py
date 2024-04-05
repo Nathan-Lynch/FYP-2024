@@ -26,6 +26,6 @@ class AdaptiveLRCallback(BaseCallback):
         new_lr = self.lr_scheduler.get_current_lr()
         self.model.policy.optimizer.param_groups[0]['lr'] = new_lr
 
-        self.logger.record(key="train/learning_rate", value=new_lr)
+        self.logger.record(key="custom/learning_rate", value=new_lr)
 
         return True

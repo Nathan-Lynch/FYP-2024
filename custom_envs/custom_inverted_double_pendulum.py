@@ -11,6 +11,7 @@ class CustomInvertedDoublePendulumEnvV0(InvertedDoublePendulumEnv):
         self.pole1_idx = 3
         self.pole_idx = 1
         self.model.geom_size[self.pole1_idx, self.pole_idx] = self.pole_length
+        self.total_reward = 0
 
     def reset(self, **kwargs):
         if self.pole_length < self.max_pole_len:
@@ -20,6 +21,17 @@ class CustomInvertedDoublePendulumEnvV0(InvertedDoublePendulumEnv):
             pass
 
         return super().reset(**kwargs)
+
+    def step(self, action):
+        observation, reward, terminated, truncated, info = super().step(action)
+
+        self.total_reward += reward
+
+        if self.total_reward >= 10000:
+            self.total_reward = 0
+            truncated = True
+
+        return observation, reward, terminated, truncated, info
 
     def update_pole_lengths(self, pole_length):
         self.model.geom_size[self.pole1_idx, self.pole_idx] = pole_length
@@ -34,6 +46,7 @@ class CustomInvertedDoublePendulumEnvV1(InvertedDoublePendulumEnv):
         self.pole1_idx = 3
         self.pole2_idx = 4
         self.pole_idx = 1
+        self.total_reward = 0
 
     def reset(self, **kwargs):
         if self.pole_length < self.max_pole_len:
@@ -41,6 +54,17 @@ class CustomInvertedDoublePendulumEnvV1(InvertedDoublePendulumEnv):
             self.update_pole_lengths(self.pole_length)
         
         return super().reset(**kwargs)
+    
+    def step(self, action):
+        observation, reward, terminated, truncated, info = super().step(action)
+
+        self.total_reward += reward
+
+        if self.total_reward >= 10000:
+            self.total_reward = 0
+            truncated = True
+
+        return observation, reward, terminated, truncated, info
 
     def update_pole_lengths(self, pole_length):
         self.model.geom_size[self.pole1_idx, self.pole_idx] = pole_length
@@ -56,6 +80,7 @@ class CustomInvertedDoublePendulumEnvV2(InvertedDoublePendulumEnv):
         self.pole1_idx = 3
         self.pole2_idx = 4
         self.pole_idx = 1
+        self.total_reward = 0
 
     def reset(self, **kwargs):
         pole_length1 = np.random.uniform(self.min_pole_len, self.max_pole_len)
@@ -64,6 +89,17 @@ class CustomInvertedDoublePendulumEnvV2(InvertedDoublePendulumEnv):
         self.update_pole_lengths(pole_length1, pole_length2)
         
         return super().reset(**kwargs)
+
+    def step(self, action):
+        observation, reward, terminated, truncated, info = super().step(action)
+
+        self.total_reward += reward
+
+        if self.total_reward >= 10000:
+            self.total_reward = 0
+            truncated = True
+
+        return observation, reward, terminated, truncated, info
 
     def update_pole_lengths(self, pole_length1, pole_length2):
         self.model.geom_size[self.pole1_idx, self.pole_idx] = pole_length1

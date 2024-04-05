@@ -9,9 +9,11 @@ import numpy as np
 import math
 import os
 
+seed_val = 2002
+
 def linear_schedule(initial_value: float, final_value: float) -> Callable[[float], float]:
 
-    # From:
+    # Modified From:
     # https://stable-baselines3.readthedocs.io/en/master/guide/examples.html
 
     """
@@ -55,7 +57,7 @@ def exponential_schedule(initial_value: float, final_value: float, decay_factor:
 
 class AdaptiveLearningRate:
     '''
-    DESCRIPTION TODO
+    Class for instantiating AdaptiveLearningRate objects
 
     :param initial_lr: Initial learning rate
     :param top_lr: Maximum value allowed for learning rate
@@ -126,7 +128,7 @@ def create_objective(env_name, model_name, timesteps, logdir, callback, lr_sched
         if lr_schedule == "constant":
             learning_rate = trial.suggest_float('learning_rate', min_lr, max_lr, log = True)
 
-            model = model_name("MlpPolicy", env, learning_rate = learning_rate, verbose = 0, tensorboard_log = logdir)
+            model = model_name("MlpPolicy", env, learning_rate = learning_rate, verbose = 0, tensorboard_log = logdir, seed = seed_val)
             model.learn(total_timesteps = timesteps, progress_bar = True, callback = callback, tb_log_name = "constant_lr")
 
             mean_reward = evaluate_policy(model, env, n_eval_episodes = 10)[0]
@@ -140,7 +142,7 @@ def create_objective(env_name, model_name, timesteps, logdir, callback, lr_sched
 
             schedule = linear_schedule(initial_lr, final_lr)
 
-            model = model_name("MlpPolicy", env, learning_rate = schedule, verbose = 0, tensorboard_log = logdir)
+            model = model_name("MlpPolicy", env, learning_rate = schedule, verbose = 0, tensorboard_log = logdir, seed = seed_val)
             model.learn(total_timesteps = timesteps, progress_bar = True, callback = callback, tb_log_name = "linear_lr")
 
             mean_reward = evaluate_policy(model, env, n_eval_episodes = 10)[0]
@@ -155,7 +157,7 @@ def create_objective(env_name, model_name, timesteps, logdir, callback, lr_sched
 
             schedule = exponential_schedule(initial_lr, final_lr, decay_rate)
 
-            model = model_name("MlpPolicy", env, learning_rate = schedule, verbose = 0, tensorboard_log = logdir)
+            model = model_name("MlpPolicy", env, learning_rate = schedule, verbose = 0, tensorboard_log = logdir, seed = seed_val)
             model.learn(total_timesteps = timesteps, progress_bar = True, callback = callback, tb_log_name = "exponential_lr")
 
             mean_reward = evaluate_policy(model, env, n_eval_episodes = 10)[0]
@@ -174,7 +176,7 @@ def create_objective(env_name, model_name, timesteps, logdir, callback, lr_sched
             callback.append(scheduler)
             callbacks = CallbackList(callback)
 
-            model = model_name("MlpPolicy", env, learning_rate = schedule.get_current_lr(), verbose = 0, tensorboard_log = logdir)
+            model = model_name("MlpPolicy", env, learning_rate = schedule.get_current_lr(), verbose = 0, tensorboard_log = logdir, seed = seed_val)
             model.learn(total_timesteps = timesteps, progress_bar = True, callback = callbacks, tb_log_name = "adaptive_lr")
 
             mean_reward = evaluate_policy(model, env, n_eval_episodes = 10)[0]

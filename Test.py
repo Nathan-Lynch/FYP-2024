@@ -8,6 +8,7 @@ from stable_baselines3 import DQN
 from stable_baselines3.common.env_util import make_vec_env
 import os
 import pickle
+from stable_baselines3 import DQN, PPO
 
 import sys
 #sys.path.append("/home/nl6/FYP/FYP-2024/")
@@ -128,9 +129,13 @@ gym.envs.register(
     id='CustomInvertedDoublePendulum-v2',
     entry_point='custom_envs.custom_inverted_double_pendulum:CustomInvertedDoublePendulumEnvV2',
 )
+gym.envs.register(
+    id='CustomCartPole-v3',
+    entry_point='custom_envs.custom_cartpole:CustomCartPoleEnvV3',
+)
 
 import gymnasium as gym
-env = gym.make("CustomInvertedDoublePendulum-v2", render_mode="human")
+env = gym.make("CustomCartPole-v0", render_mode="human")
 observation, info = env.reset(seed=42)
 for _ in range(100000):
    action = env.action_space.sample()  # this is where you would insert your policy
@@ -140,3 +145,15 @@ for _ in range(100000):
       observation, info = env.reset()
 
 env.close()
+
+'''env = gym.make("CustomCartPole-v0", render_mode=None)
+eval_cb = EvalCallback(env, eval_freq=5000, n_eval_episodes=10,
+                        deterministic=True, render=False)
+callbacks = [eval_cb]
+
+model = PPO("MlpPolicy", env, verbose = 0)
+model.learn(total_timesteps = 100000, progress_bar = True, callback = callbacks)
+
+
+
+model = DQN("Cartpole-v1", learning_rate = 0.003)'''
