@@ -9,7 +9,8 @@ from optuna.samplers import TPESampler
 from utils import create_objective
 
 import sys
-sys.path.append("/home/nl6/FYP/FYP-2024")
+#sys.path.append("/home/nl6/FYP/FYP-2024")
+sys.path.append("C:/Users/natha/Desktop/FYP-2024/")
 
 from custom_envs.custom_cartpole import CustomCartPoleEnvV0, CustomCartPoleEnvV1, CustomCartPoleEnvV2, CustomCartPoleEnvV3
 from custom_envs.custom_inverted_double_pendulum import CustomInvertedDoublePendulumEnvV0, CustomInvertedDoublePendulumEnvV1, CustomInvertedDoublePendulumEnvV2
@@ -34,13 +35,18 @@ gym.envs.register(
 
 # Common between all environments
 seed_val = 2002
-lr_strategies = ["constant", "linear", "exponential", "adaptive"]
+#lr_strategies = ["constant", "linear", "exponential", "adaptive", "adaptive_t"]
+lr_strategies = ["adaptive_t"]
+
 
 trained_dir = "/home/nl6/FYP/FYP-2024/trained_models"
 logdir = '/home/nl6/FYP/FYP-2024/logs/'
 
+trained_dir = "C:/Users/natha/Desktop/FYP-2024/trained_models"
+logdir = 'C:/Users/natha/Desktop/FYP-2024/logs/'
+
 # Maybe put in Utils.py
-def train_model(env_name, timesteps, model, lr_schedule, min_lr, max_lr, trials):
+def train_model(env_name, timesteps, model, lr_schedule, min_lr, max_lr, trials, rl_t):
     '''
     Creates an Optuna study and trains the model on a given environment.
     Saves studies in saved_studies directory.
@@ -51,6 +57,8 @@ def train_model(env_name, timesteps, model, lr_schedule, min_lr, max_lr, trials)
     :param lr_schedule: Learning rate strategy to br used.
     :param min_lr: Minimum value allowed for learning rate.
     :param max_lr: Maximum value allowed for learing rate.
+    :param trials: Number of trials to run the Study for.
+    :param rl_t: Reward Loss threshold for adaptive_t learning rate
     '''
     # Set up environment
     vec_env = make_vec_env(env_name, n_envs=1, seed=seed_val)
@@ -62,7 +70,7 @@ def train_model(env_name, timesteps, model, lr_schedule, min_lr, max_lr, trials)
     callbacks = [eval_cb]
 
     # Creates an Optuna study and runs n_trials for the study
-    obj = create_objective(env_name, model, timesteps, logdir + env_name, callbacks, lr_schedule, min_lr, max_lr)
+    obj = create_objective(env_name, model, timesteps, logdir + env_name, callbacks, lr_schedule, min_lr, max_lr, rl_t)
     study = optuna.create_study(study_name = env_name + lr_schedule, direction = "maximize", sampler=TPESampler(seed=seed_val))
     study.optimize(obj, n_trials = trials)
 
@@ -75,13 +83,13 @@ cartpole_timesteps = 400000
 cartpole_min_lr = 0.00001 # 1 order of magnitude less than sb3 default
 cartpole_max_lr = 0.01 # 2 orders of magnitude greater than sb3 default
 cartpole_n_trials = 15
+cartpole_rl_t = .1 # reward loss threshold for adaptive_t learning rate
 
-cartpole_envs = ["CartPole-v1", "CustomCartPole-v0", "CustomCartPole-v1", "CustomCartPole-v2", "CustomCartPole-v3"]
-
+cartpole_envs = ["CustomCartPole-v0", "CustomCartPole-v1", "CustomCartPole-v2", "CustomCartPole-v3"]
 # loop for cartpole experiments, trains new model for each env and lr strategy
 for env in cartpole_envs:
     for strategy in  lr_strategies:
-        train_model(env, cartpole_timesteps, DQN, strategy, cartpole_min_lr, cartpole_max_lr, cartpole_n_trials)
+        train_model(env, cartpole_timesteps, DQN, strategy, cartpole_min_lr, cartpole_max_lr, cartpole_n_trials, cartpole_rl_t)
 
 gym.envs.register(
     id='CustomInvertedDoublePendulum-v0',
@@ -101,13 +109,15 @@ idp_timesteps = 1000000
 idp_min_lr = 0.00003 # 1 order of magnitude less than sb3 default
 idp_max_lr = 0.03 # 2 orders of magnitude greater than sb3 default
 idp_n_trials = 15
+idp_rl_t = 1 # reward loss threshold for adaptive_t learning rate
+
 
 idp_envs = ["InvertedDoublePendulum-v4", "CustomInvertedDoublePendulum-v0", "CustomInvertedDoublePendulum-v1", "CustomInvertedDoublePendulum-v2"]
-
+idp_envs = ["InvertedDoublePendulum-v4"]
 # loop for Inverted Double Pendulum experiments, trains new model for each env and lr strategy
 for env in idp_envs:
     for strategy in lr_strategies:
-        train_model(env, idp_timesteps, PPO, strategy, idp_min_lr, idp_max_lr, idp_n_trials)
+        train_model(env, idp_timesteps, PPO, strategy, idp_min_lr, idp_max_lr, idp_n_trials, idp_rl_t)
 
 # Bipedal Walker Experiment Parameters
 bp_timesteps = 3000000
@@ -117,9 +127,7 @@ bp_n_trials = 5
 
 bp_envs = ["BipedalWalker-v3"]
 
-lr_strategies = ["adaptive"]
-
 # loop for Bipedal Walker experiments, trains new model for each env and lr strategy
-for env in bp_envs:
-    for strategy in lr_strategies:
-        train_model(env, bp_timesteps, PPO, strategy, bp_min_lr, bp_max_lr, bp_n_trials)
+#for env in bp_envs:
+#    for strategy in lr_strategies:
+#        train_model(env, bp_timesteps, PPO, strategy, bp_min_lr, bp_max_lr, bp_n_trials)

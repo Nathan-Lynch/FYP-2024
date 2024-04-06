@@ -103,7 +103,33 @@ class AdaptiveLearningRate:
         '''
         self.episode_rewards = []
 
-def create_objective(env_name, model_name, timesteps, logdir, callback, lr_schedule, min_lr, max_lr):
+class AdaptiveTLearningRate(AdaptiveLearningRate):
+    '''
+    Class for instantiating AdaptiveTLearningRate objects. Extends AdaptiveLearningRate to only adjust
+    the learning rate if it is below a specified threshold.
+
+    :param threshold_lr: Threshold value for learning rate adjustment
+    '''
+    def __init__(self, initial_lr, top_lr, bottom_lr, increase_factor, decrease_factor, rl_t):
+        super().__init__(initial_lr, top_lr, bottom_lr, increase_factor, decrease_factor)
+        self.rl_t = rl_t  # Threshold for learning rate adjustment
+
+    def adjust_learning_rate(self, reward):
+        '''
+        Adjusts the learning rate based on reward, but only if the current learning rate is below a specified threshold.
+        
+        :param reward: Reward obtained from latest timestep
+        '''
+        self.episode_rewards.append(reward)
+        if len(self.episode_rewards) > 0:
+            reward_loss = reward - np.mean(self.episode_rewards)
+            if abs(reward_loss) > self.rl_t: 
+                if reward_loss >= 0:
+                    self.current_lr = min(self.current_lr * self.increase_factor, self.top_lr)
+                else:
+                    self.current_lr = max(self.current_lr * self.decrease_factor, self.bottom_lr)
+
+def create_objective(env_name, model_name, timesteps, logdir, callback, lr_schedule, min_lr, max_lr, rl_t):
     '''
     Creates a custom objective function for optimization based on the environment, 
     model, and learning rate stategy
@@ -116,6 +142,7 @@ def create_objective(env_name, model_name, timesteps, logdir, callback, lr_sched
     :param lr_schedule: Learning rate strategy to be used
     :param min_lr: Minimum value allowed for learning rate
     :param max_lr: Maximum value allowed for learning rate
+    :param rl_t: Reward Loss threshold for adaptive_t learning rate
     :return: objective
     '''
     def objective(trial):
@@ -163,7 +190,7 @@ def create_objective(env_name, model_name, timesteps, logdir, callback, lr_sched
             mean_reward = evaluate_policy(model, env, n_eval_episodes = 10)[0]
             return mean_reward
 
-        else:
+        elif lr_schedule == "adaptive":
             initial_lr = trial.suggest_float('initial_lr', min_lr, max_lr, log = True)
             top_lr = trial.suggest_float('top_lr', initial_lr*2, initial_lr*10, log = True)
             bottom_lr = trial.suggest_float('bottom_lr', initial_lr/10, initial_lr/2, log = True)
@@ -178,6 +205,25 @@ def create_objective(env_name, model_name, timesteps, logdir, callback, lr_sched
 
             model = model_name("MlpPolicy", env, learning_rate = schedule.get_current_lr(), verbose = 0, tensorboard_log = logdir, seed = seed_val)
             model.learn(total_timesteps = timesteps, progress_bar = True, callback = callbacks, tb_log_name = "adaptive_lr")
+
+            mean_reward = evaluate_policy(model, env, n_eval_episodes = 10)[0]
+            return mean_reward
+
+        else:
+            initial_lr = trial.suggest_float('initial_lr', min_lr, max_lr, log = True)
+            top_lr = trial.suggest_float('top_lr', initial_lr*2, initial_lr*10, log = True)
+            bottom_lr = trial.suggest_float('bottom_lr', initial_lr/10, initial_lr/2, log = True)
+            adjustment_factor = trial.suggest_float('adjustment_factor', 0.01, 0.1, log = True)
+
+            # TODO FIX NAMING OF THESE
+            schedule = AdaptiveTLearningRate(initial_lr = initial_lr, top_lr = top_lr, bottom_lr = bottom_lr, increase_factor = 1+adjustment_factor, decrease_factor = 1-adjustment_factor, rl_t = rl_t)
+            scheduler = AdaptiveLRCallback(schedule)
+
+            callback.append(scheduler)
+            callbacks = CallbackList(callback)
+
+            model = model_name("MlpPolicy", env, learning_rate = schedule.get_current_lr(), verbose = 0, tensorboard_log = logdir, seed = seed_val)
+            model.learn(total_timesteps = timesteps, progress_bar = True, callback = callbacks, tb_log_name = "adaptive_t_lr")
 
             mean_reward = evaluate_policy(model, env, n_eval_episodes = 10)[0]
             return mean_reward

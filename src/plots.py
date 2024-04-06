@@ -76,7 +76,7 @@ def average_reward(subdirs, strategies):
     return env_rewards
 
 # Directories for extracting data
-logdir = "C:/Users/natha/Desktop/FYP-2024/logs"
+logdir = '/home/nl6/FYP/FYP-2024/logs/'
 subdirs = [os.path.join(logdir, d) for d in os.listdir(logdir) if os.path.isdir(os.path.join(logdir, d))]
 
 # Learning rate strategies used within experiments
