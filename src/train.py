@@ -9,8 +9,7 @@ from optuna.samplers import TPESampler
 from utils import create_objective
 
 import sys
-#sys.path.append("/home/nl6/FYP/FYP-2024")
-sys.path.append("C:/Users/natha/Desktop/FYP-2024/")
+sys.path.append("/home/nl6/FYP/FYP-2024")
 
 from custom_envs.custom_cartpole import CustomCartPoleEnvV0, CustomCartPoleEnvV1, CustomCartPoleEnvV2, CustomCartPoleEnvV3
 from custom_envs.custom_inverted_double_pendulum import CustomInvertedDoublePendulumEnvV0, CustomInvertedDoublePendulumEnvV1, CustomInvertedDoublePendulumEnvV2
@@ -35,15 +34,10 @@ gym.envs.register(
 
 # Common between all environments
 seed_val = 2002
-#lr_strategies = ["constant", "linear", "exponential", "adaptive", "adaptive_t"]
-lr_strategies = ["adaptive_t"]
-
+lr_strategies = ["constant", "linear", "exponential", "adaptive", "adaptivet"]
 
 trained_dir = "/home/nl6/FYP/FYP-2024/trained_models"
 logdir = '/home/nl6/FYP/FYP-2024/logs/'
-
-trained_dir = "C:/Users/natha/Desktop/FYP-2024/trained_models"
-logdir = 'C:/Users/natha/Desktop/FYP-2024/logs/'
 
 # Maybe put in Utils.py
 def train_model(env_name, timesteps, model, lr_schedule, min_lr, max_lr, trials, rl_t):
@@ -113,7 +107,6 @@ idp_rl_t = 1 # reward loss threshold for adaptive_t learning rate
 
 
 idp_envs = ["InvertedDoublePendulum-v4", "CustomInvertedDoublePendulum-v0", "CustomInvertedDoublePendulum-v1", "CustomInvertedDoublePendulum-v2"]
-idp_envs = ["InvertedDoublePendulum-v4"]
 # loop for Inverted Double Pendulum experiments, trains new model for each env and lr strategy
 for env in idp_envs:
     for strategy in lr_strategies:
@@ -125,6 +118,7 @@ bp_min_lr = 0.00003 # 1 order of magnitude less than sb3 default
 bp_max_lr = 0.03 # 2 orders of magnitude greater than sb3 default
 bp_n_trials = 5
 
+lr_strategies = ["constant", "linear", "exponential", "adaptive"]
 bp_envs = ["BipedalWalker-v3"]
 
 # loop for Bipedal Walker experiments, trains new model for each env and lr strategy
