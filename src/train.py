@@ -3,7 +3,7 @@ import optuna
 import os
 import pickle
 from stable_baselines3 import DQN, PPO
-from stable_baselines3.common.callbacks import CallbackList, EvalCallback, StopTrainingOnRewardThreshold
+from stable_baselines3.common.callbacks import CallbackList, EvalCallback
 from stable_baselines3.common.env_util import make_vec_env
 from optuna.samplers import TPESampler
 from utils import create_objective
@@ -54,7 +54,7 @@ def train_model(env_name, timesteps, model, lr_schedule, min_lr, max_lr, trials,
     :param trials: Number of trials to run the Study for.
     :param rl_t: Reward Loss threshold for adaptive_t learning rate
     '''
-    # Set up environment
+
     vec_env = make_vec_env(env_name, n_envs=1, seed=seed_val)
 
     # Set up callbacks to be used
@@ -68,7 +68,7 @@ def train_model(env_name, timesteps, model, lr_schedule, min_lr, max_lr, trials,
     study = optuna.create_study(study_name = env_name + lr_schedule, direction = "maximize", sampler=TPESampler(seed=seed_val))
     study.optimize(obj, n_trials = trials)
 
-    # Saving the study
+    # Saving studies
     with open("C:/Users/natha/Desktop/FYP-2024/saved_studies/" + lr_schedule + "_lr_" + env_name + ".pkl", "wb") as fout:
         pickle.dump(study, fout)
 
@@ -122,6 +122,6 @@ lr_strategies = ["constant", "linear", "exponential", "adaptive"]
 bp_envs = ["BipedalWalker-v3"]
 
 # loop for Bipedal Walker experiments, trains new model for each env and lr strategy
-#for env in bp_envs:
-#    for strategy in lr_strategies:
-#        train_model(env, bp_timesteps, PPO, strategy, bp_min_lr, bp_max_lr, bp_n_trials)
+for env in bp_envs:
+    for strategy in lr_strategies:
+        train_model(env, bp_timesteps, PPO, strategy, bp_min_lr, bp_max_lr, bp_n_trials)
